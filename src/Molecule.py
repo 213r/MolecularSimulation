@@ -143,9 +143,15 @@ class Molecule:
     def get_potential_energy(self):
         return self.energy 
     
+    def get_potential_energy_multi(self):
+        return self.energy_multi 
+    
     def set_potential_energy(self, energy):
         self.energy = energy
 
+    def set_potential_energy_multi(self, energy_multi):
+        self.energy_multi = energy_multi
+    
     def get_kinetic_energy(self):
         return np.sum(self.masses[:, np.newaxis] * \
         self.velocities * self.velocities) * 0.5

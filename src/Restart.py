@@ -9,19 +9,20 @@
 """
 
 def restart_mc(fname):
-    with open(self.file_restart,'r') as f: 
-        natom = len(self_mc.mol)
+    with open(fname,'r') as f: 
         positions = [] 
         line = f.readline() 
         while line:
             if "Step" in line: nstep = float(line.split()[2])
             if "Coordinates" in line:
+                natom = int(line.split()[0])  
+                line = f.readline() 
                 for _ in xrange(natom): positions.append(map(float, f.readline().split()[1:]))
-           line = f.readline() 
+            line = f.readline() 
         return positions 
 
 def restart_md(fname):
-    with open(self.file_restart,'r') as f: 
+    with open(fname,'r') as f: 
         positions, velocities = [], [] 
         line = f.readline() 
         while line:
@@ -38,30 +39,31 @@ def restart_md(fname):
     return at_start, positions, velocities 
 
 def restart_md_qmmm(fname):
-    with open(self.file_restart,'r') as f: 
-        natom = len(self_md.mol)
+    with open(fname,'r') as f: 
         positions_qm, velocities_qm = [], [] 
         positions_mm, velocities_mm = [], [] 
         line = f.readline() 
-        count = 0
+        count_pot, count_vel = True , True
         while line:
             if "Time" in line: at_start = float(line.split()[2])
-            if "Coordinates" in line:
+            if "#Coordinates" in line:
                 natom = int(line.split()[0])  
                 line = f.readline()
-                if count == 0:
+                if count_pot:
                     for _ in xrange(natom): 
                         positions_qm.append(map(float, f.readline().split()[1:]))
-                if count == 1:
+                    count_pot = False
+                else:
                     for _ in xrange(natom): 
                         positions_mm.append(map(float, f.readline().split()[1:]))
-            if "Velocities" in line:
+            if "#Velocities" in line:
                 natom = int(line.split()[0])  
                 line = f.readline() 
-                if count == 0:
+                if count_vel:
                     for _ in xrange(natom): 
                         velocities_qm.append(map(float, f.readline().split()[1:]))
-                if count == 1:
+                    count_vel = False
+                else:
                     for _ in xrange(natom): 
                         velocities_mm.append(map(float, f.readline().split()[1:]))
             line = f.readline()

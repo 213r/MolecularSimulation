@@ -1,3 +1,7 @@
+"""
+MonteCarlo (MC) simulation program 
+"""
+
 import numpy as np 
 from copy import copy 
 from math import exp, sqrt, pi
@@ -6,11 +10,6 @@ from Constants import kelvin2hartree
 from random import random, randint 
 from MakeInitial import euler_rotation
 import sys
-
-
-"""
-MonteCarlo (MC) simulation program 
-"""
 
 class MonteCarlo:
     
@@ -104,7 +103,7 @@ class MonteCarlo_Ex(MonteCarlo):
                 self.alpha_save, self.beta_save, self.gamma_save = 0., 0., 0.   
                 self.count_tot_mol, self.count_accept_mol = 0, 0 
                 self.delta_mol = delta_mol  
-                self.mol_save = self.mol.substract_molecule_index(self.treated_as_molecule)  
+                self.mol_save = self.mol.substract_molecule_index(self.treated_as_molecule) 
             else: 
                 print 'provide the step size of targeted molecule'
                 sys.exit() 

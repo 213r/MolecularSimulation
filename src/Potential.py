@@ -180,7 +180,7 @@ class Potential_TSH(Potential_QM):
         self.inp.write()
         os.system(self.inp.get_command())
         self.check_nacme_sign() 
-        self.mol.set_potential_energy(self.get_potential_energy_multi())
+        self.mol.set_potential_energy_multi(self.get_potential_energy_multi())
         self.mol.set_forces(-self.get_gradient())
 
     def set_now_state(self,now_state):
@@ -213,9 +213,11 @@ class Potential_TSH(Potential_QM):
     def get_now_state(self):
         return self.now_state
 
+    def get_nacme_multi(self):
+        return self.d_multi 
+
     def get_inner_v_d(self):
         pass
-
 
 class Potential_TSH_CASSCF(Potential_TSH):
 
@@ -236,7 +238,6 @@ class Potential_TSH_CASSCF(Potential_TSH):
 
     def get_velocity_adjustment_vecotr(self): 
         return self.d_multi  
-
 
 class Potential_TSH_CASPT2(Potential_TSH):
 

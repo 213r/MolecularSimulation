@@ -1,13 +1,16 @@
+""" 
+    Verlcity Verlet method is used in Molcular Dynaics(MD).  
+        This class inherits from Molecular Dynamics class. 
+        All used variables are in atomic units   
+"""
+
 from MolecularDynamics import MolecularDynamics
 from WriteOutput import WriteOutputMD, WriteOutputMD_QMMM
 
- """ 
-    Verlcity Verlet method is used in Molcular Dynaics(MD).  
+class VelocityVerlet(MolecularDynamics):
     
-        This class inherits from Molecular Dynamics class. 
-        All used variables are in atomic units   
-        
-        VelocityVerlet(self, mol, pot,  deltat, nstep, restart, check_mdstop_dispersion, tlim)
+    """
+    VelocityVerlet(self, mol, pot,  deltat, nstep, restart, check_mdstop_dispersion, tlim)
         ** This is performing QM or MM MD-Simulation.  
             
             mol => Molecular instance. Refer to the Molecule.py 
@@ -22,22 +25,13 @@ from WriteOutput import WriteOutputMD, WriteOutputMD_QMMM
             tlim => set the time when md is finished. 
                     default is inf. Usually, the run of md is controlled by nstep.  
 
-        VelocityVerlet_QMMM(self, mol_qm, mol_mm, pot_qm, pot_mm, pot_qmmm, dt, nstep, \
-                            restart, check_mdstop_dispersion, tlim)
-        ** This is performing QM/MM MD-Simulation.  
-           The necessary arguments are alomost same with the above. 
-           However, when you put the molecule and potential instance, you must separate 
-           QM and MM parts. And, you must add the pot_qmmm instnace, which handles the QM/MM
-           interface. 
-"""
-
-
-class VelocityVerlet(MolecularDynamics):
-
+    """
+    
     def __init__(self, mol, pot, dt, nstep, restart=False, check_mdstop_dispersion = False,\
             tlim = float('inf')):
         MolecularDynamics.__init__(self, mol, pot, dt, nstep, restart, check_mdstop_dispersion, tlim)
         if self.pot.get_check_pbc: self.mol.set_positions(self.pot.get_pbc_adjusted(self.mol.get_positions()))  
+        self.count = 0 
         self.setup_output() 
             
     def setup_output(self):
@@ -55,6 +49,7 @@ class VelocityVerlet(MolecularDynamics):
         # loop for MD 
         for _ in xrange(self.nstep):
             self.step() 
+            self.count += 1
             self.woutp.logging(self)
             self.mdstop_time_trans()
             if self.check_mdstop_dispersion: self.mdstop_atom_dispersion()
@@ -75,6 +70,15 @@ class VelocityVerlet(MolecularDynamics):
         self.elaptime += dt 
 
 class VelocityVerlet_QMMM(MolecularDynamics):
+    """ 
+        VelocityVerlet_QMMM(self, mol_qm, mol_mm, pot_qm, pot_mm, pot_qmmm, dt, nstep, \
+                            restart, check_mdstop_dispersion, tlim)
+        ** This is performing QM/MM MD-Simulation.  
+           The necessary arguments are alomost same with the above. 
+           However, when you put the molecule and potential instance, you must separate 
+           QM and MM parts. And, you must add the pot_qmmm instnace, which handles the QM/MM
+           interface. 
+    """ 
     
     def __init__(self, mol_qm, mol_mm, pot_qm, pot_mm, pot_qmmm, dt, nstep, \
             restart=False, check_mdstop_dispersion = False, tlim = float('inf')):
@@ -86,18 +90,18 @@ class VelocityVerlet_QMMM(MolecularDynamics):
         self.pot_qmmm = pot_qmmm 
         if self.pot_mm.get_check_pbc: 
             self.mol_mm.set_positions(self.pot_mm.get_pbc_adjusted(self.mol_mm.get_positions()))  
+        self.count = 0
         self.setup_output() 
-    
+
     def run(self):
-        self.pot.calc() 
-        self.pot_mm.calc() 
-        self.pot_qmmm.calc() 
+        self.pot.calc(); self.pot_mm.calc(); self.pot_qmmm.calc()
         #this is for logging at initial point 
         if not  self.restart: self.woutp.logging(self)  
 
         # loop for MD 
         for _ in xrange(self.nstep):
-            self.step() 
+            self.step()
+            self.count += 1 
             self.woutp.logging(self)
             self.mdstop_time_trans()
             if self.check_mdstop_dispersion: self.mdstop_atom_dispersion()
@@ -122,9 +126,7 @@ class VelocityVerlet_QMMM(MolecularDynamics):
         if self.pot_mm.get_check_pbc(): 
             self.mol_mm.set_positions(self.pot_mm.get_pbc_adjusted(positions_mm)) 
         else:  self.mol_mm.set_positions(positions_mm) 
-        self.pot.calc() 
-        self.pot_mm.calc() 
-        self.pot_qmmm.calc() 
+        self.pot.calc(); self.pot_mm.calc(); self.pot_qmmm.calc()
         self.mol.set_velocities(self.mol.get_velocities() + \
                 0.5 * (self.mol.get_accelerations() + \
                 get_accelerations_save) * dt)

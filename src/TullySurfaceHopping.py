@@ -2,9 +2,9 @@
 from numpy import linalg
 from random import random  
 from Constants import fs2tau, tau2fs 
-import numpy as np
-import math 
+from math import sqrt 
 import os, sys
+import numpy as np
 from MolecularDynamics import MolecularDynamics
 from WriteOutput import WriteOutputMD_TSH, WriteOutputMD_TSH_QMMM 
 
@@ -19,12 +19,12 @@ class TullySurfaceHopping(MolecularDynamics):
     """
     
     def __init__(self, mol, pot, dt, nstep, tsh_times, restart = False,\
-            tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, mdstop_dispersion = False,\
+            tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, check_mdstop_dispersion = False,\
             tlim = float('inf')):
     
       
         MolecularDynamics.__init__(self, mol, pot, dt, nstep, restart,\
-                mdstop_dispersion, tlim)
+                check_mdstop_dispersion, tlim)
 
         self.now_state = self.pot.get_now_state()
         self.nrange = self.pot.get_nrange()
@@ -67,7 +67,7 @@ class TullySurfaceHopping(MolecularDynamics):
             self.woutp.logging(self)
         
             self.mdstop_time_trans()
-            if self.mdstop_dispersion: self.mdstop_atom_dispersion()
+            if self.check_mdstop_dispersion: self.mdstop_atom_dispersion()
 
         self.woutp.finalize(self)
 
@@ -94,10 +94,14 @@ class TullySurfaceHopping(MolecularDynamics):
         self.elaptime += dt 
 
     def pre_judge_tsh(self):
-        self.pot_multi = self.mol.get_potential_energy()
+        self.pot_multi = self.pot.get_potential_energy_multi()
         self.nac =  np.diag(self.pot_multi) -  1.j*self.pot.get_inner_v_d()
         self.eig, self.trans = linalg.eigh(self.nac)
-        self.woutp.write_prob_message("time: {}\n".format(self.elaptime*tau2fs)) 
+        self.woutp.write_prob_message("Time: {} :  ".format(self.elaptime * tau2fs )) 
+        for i in xrange(self.nrange):
+            if i == self.now_state: continue 
+            self.woutp.write_prob_message("{} to {} ".format(self.now_state,i))
+        self.woutp.write_prob_message("\n")
 
     def judge_tsh(self):
         while self.count_tsh < self.tsh_times:
@@ -121,21 +125,20 @@ class TullySurfaceHopping(MolecularDynamics):
             tot = 0.0
             self.woutp.write_prob_message("step :{} ".format(self.count_tsh)) 
             
-            for j in xrange(self.nrange):
-                if j == self.now_state: continue 
-                g = self.delta_st*b[j,self.now_state] / \
+            for i in xrange(self.nrange):
+                if i == self.now_state: continue 
+                g = self.delta_st*b[i,self.now_state] / \
                     a[self.now_state,self.now_state].real
                 # log the hopping probability 
-                self.woutp.write_prob_message("  {0} to {1} : {2: 10.8f}  ".format(self.now_state, j, g)) 
+                self.woutp.write_prob_message("{0: 10.8f}  ".format(g)) 
                 if tot < rand < tot + g:
                     self.woutp.write_prob_message("\nHopping Starts\n") 
                     self.woutp.write_trj_message("Hopping Starts [Probability Ocuuracne] \n")
-                    if self.velocity_adjustment(j): return True
+                    if self.velocity_adjustment(i): return
                 tot += g
-        self.woutp.write_prob_message("\n") 
+            self.woutp.write_prob_message("\n") 
         self.count_tsh = 0
          
-
     def velocity_adjustment(self,cand_state):
             
         # unit vector alog the mass-weighted coordinate
@@ -153,6 +156,7 @@ class TullySurfaceHopping(MolecularDynamics):
         if in_root < 0: 
             # hopping failer because of the insuffiency of kinetic energy 
             self.woutp.write_trj_message("Hopping Failur [Kinetic Enerty Insuffiency]\n")
+            return False
         else:
             self.woutp.write_trj_message("Hopping Success!! State has changed from {0} to {1}\n"\
                         .format(self.now_state+1,cand_state+1))
@@ -160,11 +164,12 @@ class TullySurfaceHopping(MolecularDynamics):
             
             # renewal for energy and force
             # time integration restarts at the last configuration  
-            n = math.sqrt(in_root) - in_prd       
+            n = sqrt(in_root) - in_prd       
             self.mol.set_velocities(velo + n * d / self.m_root[:,np.newaxis])
             self.now_state = cand_state 
             self.pot.set_now_state(self.now_state) 
             self.pot.calc() 
+            return True 
     
     def check_ediff(self):
         if np.any(np.diff(self.pot_multi) < self.tsh_ediff_thresh):
@@ -173,14 +178,13 @@ class TullySurfaceHopping(MolecularDynamics):
             self.dt = self.dt_bak
         self.delta_st = 0.5 * self.dt / self.tsh_times 
 
-
 class TullySurfaceHopping_QMMM(TullySurfaceHopping):
     
     def __init__(self, mol_qm, mol_mm, pot_qm, pot_mm, pot_qmmm, dt, nstep, tsh_times, restart = False, \
-            tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, mdstop_dispersion = False, tlim = float('inf')):
+            tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, check_mdstop_dispersion = False, tlim = float('inf')):
 
         TullySurfaceHopping.__init__(self,mol_qm ,pot_qm, dt, nstep, tsh_times, restart,\
-            tsh_ediff_thresh, tsh_ediff_factor, mdstop_dispersion, tlim)
+            tsh_ediff_thresh, tsh_ediff_factor, check_mdstop_dispersion, tlim)
 
         self.mol_mm = mol_mm
         self.pot_mm = pot_mm
@@ -190,6 +194,12 @@ class TullySurfaceHopping_QMMM(TullySurfaceHopping):
         self.woutp = WriteOutputMD_TSH_QMMM()
         if self.restart: self.woutp.restart(self)
         else: self.woutp.start(self)
+
+    def prepare(self):
+        self.setup_output() 
+        self.pot.calc(); self.pot_mm.calc(); self.pot_qmmm.calc()   
+        self.pre_judge_tsh()
+        self.check_ediff()
 
     def step(self):
         dt = self.dt
@@ -201,9 +211,7 @@ class TullySurfaceHopping_QMMM(TullySurfaceHopping):
         self.mol_mm.set_positions(self.mol_mm.get_positions() + \
                 self.mol_mm.get_velocities() *  dt + 0.5 * \
                 get_accelerations_save_mm * dt * dt)
-        self.pot.calc() 
-        self.pot_mm.calc() 
-        self.pot_qmmm.calc() 
+        self.pot.calc(); self.pot_mm.calc(); self.pot_qmmm.calc()   
         self.mol.set_velocities(self.mol.get_velocities() + \
                 0.5 * (self.mol.get_accelerations() + \
                 get_accelerations_save) * dt)

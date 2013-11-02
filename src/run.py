@@ -10,10 +10,10 @@ vlength = lattice.get_lattice_length()
 mol = lattice.get_molecule() 
 
 # define the potential  
-pot = Potential_MM(mol_tot, check_pbc=True, vlength=vlength) 
+pot = Potential_MM(mol, check_pbc=True, vlength=vlength) 
 
 # make the instance
-delta = [0.2] * (len(mol_tot)) 
+delta = [0.2] * (len(mol)) 
 mc = MonteCarlo_Ex(mol, pot, delta, 100000, 30.0, restart=False)  
 
 # adjust the frequency of the output reloading 
