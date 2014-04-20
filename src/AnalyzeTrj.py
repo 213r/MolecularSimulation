@@ -42,20 +42,14 @@ def get_data(fname, start, end=float("inf")):
             time = float(regexp.group(1))  
             if start <= time and time < end: 
                 positions, velocities = [], [] 
-                while line:
-                    if "Coordinates" in line:
-                        line = f.readline() 
-                        while line != "\n":
-                            positions.append(map(float,line.split()[1:]))       
-                            line = f.readline() 
-                    if "Velocities" in line:
-                        line = f.readline() 
-                        while line != "\n":
-                            velocities.append(map(float,line.split()[1:]))       
-                            line = f.readline() 
-                        break 
-                    line = f.readline() 
-                yield time, positions, velocities  
+                line = f.readline() 
+                natom = int(line.split()[0]) 
+                line = f.readline() 
+                positions = np.array([map(float,f.readline().split()[1:]) for _ in xrange(natom)])       
+                line = f.readline() 
+                line = f.readline() 
+                velocities = np.array([map(float,f.readline().split()[1:]) for _ in xrange(natom)])       
+                yield time, np.array(positions), np.array(velocities) 
         line = f.readline() 
 
 
