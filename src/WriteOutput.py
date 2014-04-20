@@ -56,7 +56,7 @@ class WriteOutput:
     def write_xyz(self,self_simu):
         if self.count_xyz == self.freq_xyz:
             self.count_xyz = 0
-            if hasattr(self_simu, "elaptime"): mess = "Time: {} fs".format(self_simu.count,self_simu.elaptime * tau2fs) 
+            if hasattr(self_simu, "elaptime"): mess = "No.{}, Time: {} fs".format(self_simu.count,self_simu.elaptime * tau2fs) 
             else: mess = None  
             with open(self.file_xyz,'a') as f: 
                 f.write(self_simu.mol.get_positions_formated(unit="ang",label=False, message=mess))   

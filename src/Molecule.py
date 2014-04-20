@@ -177,13 +177,13 @@ class Molecule:
         return acos(x)   
 
     def get_positions_formated(self, unit='bohr', label = True, message = None):
-        str = "    {}".format(self.natoms)
+        str = "    {}\n".format(self.natoms)
         if label: 
-            if message == None: str += "   #Coordinates [{}] \n\n".format(unit) 
-            else: str += "   #Coordinates [{}] {} \n\n".format(unit,message) 
+            if message == None: str += "   #Coordinates [{}] \n".format(unit) 
+            else: str += "   #Coordinates [{}] {} \n".format(unit,message) 
         else: 
-            if message == None: str += "\n\n"  
-            else: str += "    {} \n\n".format(message) 
+            if message == None: str += "\n"  
+            else: str += "    {} \n".format(message) 
             
         for i in xrange(self.natoms):
             sym = self.atomnames[i]
@@ -196,13 +196,13 @@ class Molecule:
         return str 
 
     def get_velocities_formated(self, unit='bohr/tau', label = True, message = None):
-        str = "    {}".format(self.natoms)
+        str = "    {}\n".format(self.natoms)
         if label: 
-            if message == None: str += "   #Velocities [{}] \n\n".format(unit) 
-            else: str += "   #Velocities [{}] {} \n\n".format(unit,message) 
+            if message == None: str += "   #Velocities [{}] \n".format(unit) 
+            else: str += "   #Velocities [{}] {}\n".format(unit,message) 
         else: 
-            if message == None: str += "\n\n"  
-            else: str += "    {} \n\n".format(message) 
+            if message == None: str += "\n"  
+            else: str += "    {} \n".format(message) 
  
         for i in xrange(self.natoms):
             sym = self.atomnames[i]

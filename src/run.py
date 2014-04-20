@@ -4,11 +4,9 @@ from MonteCarlo import MonteCarlo_Ex
 
 # Set the initial coordinate
 # lattice structure of 500 Ar atoms
-n = 500 
+n = 50 
 lattice = SetLattice("Ar",n,1.77)
 vlength = lattice.get_lattice_length() 
-mol = lattice.get_molecule() 
-
 # define the potential  
 pot = Potential_MM(mol, check_pbc=True, vlength=vlength) 
 
