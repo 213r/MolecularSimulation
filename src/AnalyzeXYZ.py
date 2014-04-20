@@ -2,14 +2,18 @@ import numpy as np
 from Molecule import Molecule 
 from Constants import bohr2ang
 
-def read_xyz(fname):
+def read_xyz(fname,freq=1):
     f = open(fname, "r") 
+    count = freq
     line = f.readline() 
     while line: 
-        natom = int(line)
+        natom = int(line.split()[0])
         doc = line  
         for _ in xrange(natom+1): doc += f.readline()   
-        yield doc  
+        if count == freq: 
+            count = 0 
+            yield doc  
+        count += 1 
         line = f.readline() 
 
 def get_positions(fname):

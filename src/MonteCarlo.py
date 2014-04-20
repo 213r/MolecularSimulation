@@ -124,7 +124,11 @@ class MonteCarlo_Ex(MonteCarlo):
             int_trial_matrix = np.array([self.pot.get_interaction_energy(i) for i in self.treated_as_molecule])
             int_save_matrix = np.array([self.interaction_save[i] for i in self.treated_as_molecule])
             delta_e = np.sum(int_trial_matrix) - np.sum(int_save_matrix)  
-            judge = exp(- self.beta * delta_e) > random()  
+            try: 
+                judge = exp(- self.beta * delta_e) > random()  
+            except OverflowError: 
+                if delta_e < 0: judge = True
+                else: judge = False
             # the trial movement is judged 
             if judge: 
                 self.count_accept_mol += 1 
@@ -145,7 +149,11 @@ class MonteCarlo_Ex(MonteCarlo):
                 + self.delta[ind] * random_v(self.mol.get_ndims()))
             int_trial = self.pot.get_interaction_energy(ind) 
             delta_e = np.sum(int_trial) - np.sum(self.interaction_save[ind])  
-            judge = exp(- self.beta * delta_e) > random()  
+            try: 
+                judge = exp(- self.beta * delta_e) > random()  
+            except OverflowError: 
+                if delta_e < 0: judge = True
+                else: judge = False
             # the trial movement is judged 
             if judge: 
                 self.count_accept += 1 

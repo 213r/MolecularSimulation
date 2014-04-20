@@ -13,14 +13,18 @@ class WriteOutput:
     def __init__(self):
  
         self.time_start = datetime.now()   # log the time when MD starts
-        self.freq_xyz, self.freq_energy, self.freq_trj = 0, 0, 0 
-        self.count_xyz, self.count_energy, self.count_trj = 0, 0, 0 
+        self.freq_xyz, self.freq_energy, self.freq_trj, self.freq_vel_xyz = 0, 0, 0, 0 
+        self.count_xyz, self.count_energy, self.count_trj, self.count_vel_xyz = 0, 0, 0, 0 
         self.count = 0
 
     def set_freq_xyz(self, freq):
         self.freq_xyz = freq - 1
         if self.not_restart: self.count_xyz = self.freq_xyz
-    
+ 
+    def set_freq_vel_xyz(self, freq):
+        self.freq_vel_xyz = freq - 1
+        if self.not_restart: self.count_vel_xyz = self.freq_vel_xyz
+
     def set_freq_energy(self, freq):
         self.freq_energy = freq - 1
         if self.not_restart: self.count_energy = self.freq_energy
@@ -52,8 +56,10 @@ class WriteOutput:
     def write_xyz(self,self_simu):
         if self.count_xyz == self.freq_xyz:
             self.count_xyz = 0
+            if hasattr(self_simu, "elaptime"): mess = "Time: {} fs".format(self_simu.count,self_simu.elaptime * tau2fs) 
+            else: mess = None  
             with open(self.file_xyz,'a') as f: 
-                f.write(self_simu.mol.get_positions_formated(unit="ang",label=False))   
+                f.write(self_simu.mol.get_positions_formated(unit="ang",label=False, message=mess))   
         else: self.count_xyz += 1 
     
     def write_trj(self, self_simu):
@@ -144,10 +150,12 @@ class WriteOutputMD(WriteOutput):
         self.file_log, self.file_trj = "md.log", "md.trj"
         self.file_restart = "md_restart.dat"
 
-    def start(self):
+    def start(self, self_md):
         WriteOutput.start(self) 
         self.write_log_message("MD starts at {0:%Y-%m-%d %H:%M:%S}\n".format(self.time_start))
-        self.write_ene_message("#Time[fs] Kinetic[H] Potential[H] Total[H]\n")
+        #self.write_ene_message("#Time[fs] Kinetic[H] Potential[H] Total[H]\n")
+        self.write_ene_message("#Time[fs] Kin(QM)[H] Pot(QM)(1~{0}) Total\n"\
+                .format(self_md.nrange))
 
     def restart(self, self_md):
         WriteOutput.restart(self) 
@@ -165,8 +173,13 @@ class WriteOutputMD(WriteOutput):
         if self.count_energy == self.freq_energy:
             self.count_energy = 0
             kin = self_md.mol.get_kinetic_energy()
-            pot = self_md.mol.get_potential_energy()
-            self.write_ene_message("{0:5.3f} {1: 8.6f} {2: 8.6f} {3: 8.6f}\n".format(self_md.elaptime*tau2fs, kin, pot, kin + pot))
+            pot_multi = self_md.mol.get_potential_energy_multi()
+            tot = kin + pot_multi[0]
+            with open(self.file_ene,'a') as f: 
+                f.write("{0: 4.2f} ".format(self_md.elaptime*tau2fs))
+                f.write("{0: 8.6f} ".format(kin))
+                for i in pot_multi: f.write(" {0: 8.6f} ".format(i))
+                f.write("{0: 8.6f}\n".format(tot))
         else: self.count_energy += 1 
             
     def finalize(self, self_md):
@@ -187,11 +200,14 @@ class WriteOutputMD_QMMM(WriteOutput):
         self.file_xyz, self.file_ene = "md_qmmm.xyz", "md_qmmm_energy.dat" 
         self.file_log, self.file_trj = "md_qmmm.log", "md_qmmm.trj"
         self.file_restart = "md_qmmm_restart.dat"
+        self.file_vel_xyz = "md_qmmm_vel.xyz"
 
-    def start(self):
+    def start(self, self_md):
         WriteOutput.start(self) 
         self.write_log_message("MD starts at {0:%Y-%m-%d %H:%M:%S}\n".format(self.time_start))
-        self.write_ene_message("#Time[fs] Kin(QM)[H] Pot(QM) Kin(MM) Pot(MM) Pot(QMMM) Total\n")
+        #self.write_ene_message("#Time[fs] Kin(QM)[H] Pot(QM) Kin(MM) Pot(MM) Pot(QMMM) Total\n")
+        self.write_ene_message("#Time[fs] Kin(QM)[H] Pot(QM)(1~{0}) Kin(MM) Pot(MM) Pot(QMMM) Total\n"\
+                .format(self_md.nrange))
 
     def restart(self, self_md):
         WriteOutput.restart(self) 
@@ -204,6 +220,7 @@ class WriteOutputMD_QMMM(WriteOutput):
 
     def logging(self, self_md):
         self.write_xyz(self_md)
+        self.write_vel_xyz(self_md)
         self.write_trj(self_md)
         self.write_energy(self_md)
  
@@ -211,22 +228,33 @@ class WriteOutputMD_QMMM(WriteOutput):
         if self.count_xyz == self.freq_xyz:
             self.count_xyz = 0
             mol_tot = bind_molecule(self_md.mol,self_md.mol_mm) 
+            mess = "No.{} Time: {} fs [ang]".format(self_md.count, self_md.elaptime * tau2fs) 
             with open(self.file_xyz,'a') as f: 
-                f.write(mol_tot.get_positions_formated(unit="ang",label=False))   
+                f.write(mol_tot.get_positions_formated(unit="ang",label=False,message=mess))   
         else: self.count_xyz += 1 
-    
+  
+    def write_vel_xyz(self,self_md):
+        if self.count_vel_xyz == self.freq_vel_xyz:
+            self.count_vel_xyz = 0
+            mol_tot = bind_molecule(self_md.mol,self_md.mol_mm) 
+            mess = "Time: {} fs  [bohr/tau]".format(self_md.elaptime * tau2fs) 
+            with open(self.file_vel_xyz,'a') as f: 
+                f.write(mol_tot.get_velocities_formated(unit="bohr/tau",label=False,message=mess))   
+        else: self.count_vel_xyz += 1 
+      
     def write_energy(self, self_md):
         if self.count_energy == self.freq_energy:
             self.count_energy = 0
             kin_qm = self_md.mol.get_kinetic_energy()
-            pot_qm = self_md.mol.get_potential_energy()
+            pot_qm_multi = self_md.mol.get_potential_energy_multi()
             kin_mm = self_md.mol_mm.get_kinetic_energy()
             pot_mm = self_md.mol_mm.get_potential_energy()
             pot_qmmm = self_md.pot_qmmm.get_interaction_energy() 
-            tot = kin_qm + pot_qm + kin_mm + pot_mm + pot_qmmm 
+            tot = kin_qm + pot_qm_multi[0] + kin_mm + pot_mm + pot_qmmm 
             with open(self.file_ene,'a') as f: 
                 f.write("{0: 4.2f} ".format(self_md.elaptime*tau2fs))
-                f.write("{0: 8.6f} {1: 8.6f} ".format(kin_qm, pot_qm))
+                f.write("{0: 8.6f} ".format(kin_qm))
+                for i in pot_qm_multi: f.write(" {0: 8.6f} ".format(i))
                 f.write("{0: 8.6f} {1: 8.6f} ".format(kin_mm, pot_mm))
                 f.write("{0: 8.6f} {1: 8.6f}\n".format(pot_qmmm, tot))
         else: self.count_energy += 1
@@ -351,11 +379,17 @@ class WriteOutputMD_TSH_QMMM(WriteOutputMD_TSH):
         self.file_restart = "md_tsh_qmmm_restart.dat"
         self.file_prob = "tsh_prob.dat" 
 
+    def start(self,self_tsh):
+        WriteOutput.start(self) 
+        if os.path.isfile(self.file_prob): os.remove(self.file_prob)  
+
+        self.write_log_message("MD starts at {0:%Y-%m-%d %H:%M:%S}\n".format(self.time_start))
+        self.write_ene_message("#Time[fs] State Kin(QM)[H] Pot(QM)(1~{0},current) Kin(MM) Pot(MM) Pot(QMMM) Total\n"\
+                .format(self_tsh.nrange))
+
     def restart(self, self_tsh):
         WriteOutput.restart(self) 
         self.write_log_message("MD starts at {0:%Y-%m-%d %H:%M:%S}\n".format(self.time_start))
-        self.write_ene_message("#Time[fs] State Kin(QM)[H] Pot(QM)(1~{0},current) Kin(MM) \
-                Pot(MM) Pot(QMMM) Total\n".format(self_tsh.nrange))
                             
 #        with open(self.file_restart,'r') as f: 
 #            natom = len(self_tsh.mol)
@@ -383,6 +417,15 @@ class WriteOutputMD_TSH_QMMM(WriteOutputMD_TSH):
 #            self_tsh.mol.set_positions(positions); self_tsh.mol.set_velocities(velocities) 
 #            self_tsh.mol_mm.set_positions(positions_mm); self_tsh.mol_mm.set_velocities(velocities_mm) 
 #            self_tsh.set_coefficients(coefficients)
+
+    def write_xyz(self,self_tsh):
+        if self.count_xyz == self.freq_xyz:
+            self.count_xyz = 0
+            mol_tot = bind_molecule(self_tsh.mol,self_tsh.mol_mm) 
+            mess = "No.{} Time: {} fs [ang]".format(self_tsh.count, self_tsh.elaptime * tau2fs) 
+            with open(self.file_xyz,'a') as f: 
+                f.write(mol_tot.get_positions_formated(unit="ang",label=False,message=mess))   
+        else: self.count_xyz += 1 
 
     def write_energy(self, self_tsh):
         if self.count_energy == self.freq_energy:

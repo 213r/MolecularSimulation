@@ -4,7 +4,7 @@ from copy import deepcopy
 from math import sqrt 
 from IO_MOLPRO import InputMOLPRO, OutputMOLPRO
 #from Potential_MM_Cython import potential_mm_cython, potential_qmmm_cython  
-from Potential_MM_f2py import potential_mm_f2py, potential_mm_f2py_mc, potential_qmmm_f2py
+from Potential_MM_f2py import potential_mm_f2py_ar, potential_mm_f2py_mc_hcooh_ar, potential_qmmm_f2py_hcooh_ar
 
 """
 Potential Module 
@@ -38,7 +38,8 @@ class Potential_MM:
         positions = self.mol.get_positions() 
         atomnumbers = self.mol.get_atomnumbers()
         #self.energy, self.forces = potential_mm_cython(positions, atomnumbers, self.rlimit) 
-        self.energy, forces = potential_mm_f2py(atomnumbers, positions.T, self.rlimit, self.check_pbc, self.box, self.invbox) 
+        #print positions.T 
+        self.energy, forces = potential_mm_f2py_ar(positions.T, self.rlimit, self.check_pbc, self.box, self.invbox) 
         self.forces = forces.T 
         self.mol.set_potential_energy(self.energy)
         self.mol.set_forces(self.forces) 
@@ -47,7 +48,9 @@ class Potential_MM:
         #This method is only for MonteCarlo 
         positions = self.mol.get_positions() 
         atomnumbers = self.mol.get_atomnumbers()
-        return potential_mm_f2py_mc(ind, atomnumbers, positions.T, self.rlimit, self.check_pbc, self.box, self.invbox) 
+        #print atomnumbers 
+        #sys.exit() 
+        return potential_mm_f2py_mc_HCOOHAr(ind, positions.T, self.rlimit, self.check_pbc, self.box, self.invbox) 
 
     def get_potential_energy(self):
         return self.energy 
@@ -61,6 +64,8 @@ class Potential_QMMM(Potential_MM):
         self.mol_qm = mol_qm
         self.mol_mm = mol_mm
         self.rlimit = rlimit 
+        #print "position mm" 
+        #print self.mol_mm.get_positions() 
         self.check_pbc = check_pbc 
         self.box = np.zeros((3,3)) 
         self.invbox = np.zeros((3,3))  
@@ -68,53 +73,78 @@ class Potential_QMMM(Potential_MM):
 
     def calc(self):
         positions_qm = self.mol_qm.get_positions() 
-        atomnumbers_qm = self.mol_qm.get_atomnumbers()
         positions_mm = self.mol_mm.get_positions() 
-        atomnumbers_mm = self.mol_mm.get_atomnumbers()
-        self.energy, forces_qm, forces_mm = potential_qmmm_f2py(atomnumbers_qm, \
-                atomnumbers_mm, positions_qm.T, positions_mm.T, self.rlimit, \
+        #print "position mm" 
+        #print positions_qm
+        #print positions_mm
+        #print self.mol_qm.get_atomnumbers()
+        #sys.exit()
+        self.energy, forces_qm, forces_mm = potential_qmmm_f2py_hcooh_ar( \
+                positions_qm.T, positions_mm.T, self.rlimit, \
                 self.check_pbc, self.box, self.invbox)
+        #print "qm" 
+        #print self.mol_qm.get_forces()
+        #print "qm/mm" 
+        #print forces_qm.T
         self.mol_qm.set_forces(self.mol_qm.get_forces() + forces_qm.T) 
         self.mol_mm.set_forces(self.mol_mm.get_forces() + forces_mm.T) 
 
     def get_interaction_energy(self):
         return self.energy 
 
+
 class Potential_QM:
     
-    def __init__(self, mol, inp):
+    def __init__(self, mol, inp, nrange = 1):
         self.mol = mol
         self.inp = inp
+        self.nrange = nrange
         if str(self.inp) == "InputMOLPRO":
             root, ext = os.path.splitext(self.inp.get_inputname())
-            self.outp = OutputMOLPRO(root + ".out",self.mol)
+            self.outp = OutputMOLPRO(root + ".out", self.mol)
 
     def override_output(self, wfile,mol=None):
         if mol is None: mol = self.mol 
-        self.outp = OutputMOLPRO(wfile,self.mol)
+        self.outp = OutputMOLPRO(wfile, self.mol)
 
     def calc(self):
         self.inp.set_molecule(self.mol) 
         self.inp.make_input()
         self.inp.write()
         os.system(self.inp.get_command())            
+        self.mol.set_potential_energy_multi(self.get_potential_energy_multi())
         self.mol.set_potential_energy(self.get_potential_energy())
         self.mol.set_forces(-self.get_gradient())
 
+    def get_check_pbc(self):
+        return False 
+    
+    def get_pbc_adjusted(self, position):
+        return position 
+    
     def get_potential_energy(self):
+        pass 
+    
+    def get_potential_energy_multi(self):
         pass 
 
     def get_gradient(self):
         pass
 
+    def get_nrange(self):
+        return self.nrange
 
 class Potential_QM_RHF(Potential_QM):
 
     def __init__(self, mol, inp):
         Potential_QM.__init__(self, mol, inp)
 
+    def get_potential_energy_multi(self):
+        self.ene = self.outp.get_potential_energy_rhf()
+        return np.array(self.ene) 
+
     def get_potential_energy(self):
-        return self.outp.get_potential_energy_rhf()
+        return self.ene 
 
     def get_gradient(self):
         return self.outp.get_gradient_multi(0) 
@@ -124,8 +154,12 @@ class Potential_QM_MP2(Potential_QM):
     def __init__(self, mol, inp):
         Potential_QM.__init__(self, mol, inp)
 
+    def get_potential_energy_multi(self):
+        self.ene = self.outp.get_potential_energy_mp2()
+        return np.array(self.ene) 
+    
     def get_potential_energy(self):
-        return self.outp.get_potential_energy_mp2()
+        return self.ene 
 
     def get_gradient(self):
         return self.outp.get_gradient_multi(0) 
@@ -134,14 +168,16 @@ class Potential_QM_MP2(Potential_QM):
 class Potential_QM_CASSCF(Potential_QM):
 
     def __init__(self, mol, inp, now_state, nrange):
-        Potential_QM.__init__(self, mol, inp)
-
+        Potential_QM.__init__(self, mol, inp, nrange)
         self.now_state = now_state
-        self.nrange = nrange
         self.inp.set_cpmcscf_istate(self.now_state,self.nrange) 
     
+    def get_potential_energy_multi(self):
+        self.ene_multi = self.outp.get_potential_energy_mcscf_multi(self.nrange)
+        return self.ene_multi
+    
     def get_potential_energy(self):
-        return self.outp.get_potential_energy_mcscf_multi(self.nrange)[self.now_state]
+        return self.ene_multi[self.now_state]
 
     def get_gradient(self):
         return self.outp.get_gradient_multi(self.now_state) 
@@ -150,26 +186,24 @@ class Potential_QM_CASSCF(Potential_QM):
 class Potential_QM_CASPT2(Potential_QM):
     
     def __init__(self, mol, inp, now_state, nrange):
-        Potential_QM.__init__(self, mol, inp)
+        Potential_QM.__init__(self, mol, inp, nrange)
 
         self.now_state = now_state
-        self.nrange = nrange
         self.inp.set_caspt2_istate(self.now_state,self.nrange) 
     
-    def get_potential_energy(self):
-        ene = self.outp.get_data_caspt2_multi(self.nrange)[0]
-        return ene[self.now_state]
+    def get_potential_energy_multi(self):
+        self.ene_multi = np.array([i for i in self.outp.get_data_caspt2_multi(self.nrange)[0]])
+        return self.ene_multi 
 
     def get_gradient(self):
-        return self.outp.get_gradient_multi(self.now_state) 
+        return self.ene_multi(self.now_state) 
 
 class Potential_TSH(Potential_QM):
 
     def __init__(self, mol, inp, now_state, nrange):
         #super(Potential_TSH, self).__init__(mol, inp)
-        Potential_QM.__init__(self, mol, inp)
+        Potential_QM.__init__(self, mol, inp, nrange)
         self.now_state = now_state
-        self.nrange = nrange
         self.d_multi_old = None
     
         self.set_now_state(self.now_state) 
@@ -207,8 +241,6 @@ class Potential_TSH(Potential_QM):
     def get_gradient(self):
         return self.outp.get_gradient_multi(self.now_state) 
     
-    def get_nrange(self):
-        return self.nrange
 
     def get_now_state(self):
         return self.now_state

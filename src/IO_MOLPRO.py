@@ -9,9 +9,8 @@ from Constants import bohr2ang, ang2bohr
 
 class InputMOLPRO:
 
-    def __init__(self,wfile="tmp.com"):
+    def __init__(self):
         # set the default parameter 
-        self.wfile = wfile
         self.memory = 400
         self.option = '' 
         self.title = 'test' 
@@ -21,6 +20,8 @@ class InputMOLPRO:
         self.mem_unit = 'm'
         #self.initialize()
         self.symmetry = 'nosym'
+
+        self.wfile = "tmp.com"
 
         self.user = pwd.getpwuid(os.getuid())[0]   
         self.cwd = os.getcwd() 
@@ -167,6 +168,7 @@ class InputMOLPRO:
         #submit = "/share/apps/opt/molpro/2010.1/bin/molprop_2010_1_Linux_x86_64_i8"
         submit = "/share/apps/opt/molpro/2008.1/bin/molpros_2008_1_Linux_x86_64_i8" 
         scrdir = "/scr/" + self.user 
+        #scrdir = os.getcwd() 
         return "{0} --no-xml-output -d {1} -I {1} -W {1} {2}/{3}".format(submit, \
         scrdir, self.cwd, self.get_inputname())
 
@@ -175,10 +177,11 @@ class OutputMOLPRO:
 
     def __init__(self,wfile,mol=None):
         self.wfile = wfile 
-        if mol is None: 
-            mol = self.get_mol_info() 
+        self.mol = mol 
+        #if mol is None: 
+        #    mol = self.get_mol_info() 
          
-        self.natom = len(mol) 
+        #self.natom = len(mol) 
         #if mol is None: self.mol = self.get_mol_info() 
         #else: self.mol = mol 
     
@@ -207,9 +210,11 @@ class OutputMOLPRO:
         ele = re.compile("(\D+)")
         while l:
             if l.find("ATOMIC COORDINATES") > -1:
-                for _ in xrange(4): l = f.readline()
-                while l != '\n': 
+                for _ in xrange(4): 
+                    l = f.readline()
+                while True: 
                     atom = l.split()  
+                    if atom == []: break 
                     sym, coord = ele.match(atom[1]).group() ,map(float, atom[3:6])
                     symbols.append(sym)  
                     coords.append(coord)  
@@ -245,17 +250,38 @@ class OutputMOLPRO:
             print 'no file of ' + self.wfile
             sys.exit() 
 
-        ene = 0.0 
+        ene_ary = [] 
+        pattern = re.compile(r"!.*MP2") 
         l = f.readline()
         while l:
-            if l.find('!MP2 Energy') > -1:
-                ene = float(l.split()[2])
+            if pattern.search(l): ene_ary.append(float(l.split()[-1]))
             l = f.readline()
 
-        try:
-            return ene
+        if len(ene_ary) > 1: return ene_ary 
+        elif len(ene_ary) == 1: return ene_ary[0]
+        else: 
+            print  "No the energy at ccsd(t) level found"
+            sys.exit() 
+
+
+    def get_potential_energy_ccsdt(self):
+        try: 
+            f = open(self.wfile,'r')
         except:
-            print 'no convergence'
+            print 'no file of ' + self.wfile
+            sys.exit() 
+
+        ene_ary = [] 
+        pattern = re.compile(r"!.*CCSD\(T\)") 
+        l = f.readline()
+        while l:
+            if pattern.search(l): ene_ary.append(float(l.split()[-1]))
+            l = f.readline()
+
+        if len(ene_ary) > 1: return np.array(ene_ary)
+        elif len(ene_ary) == 1: return ene_ary[0]
+        else: 
+            print  "No the energy at ccsd(t) level found"
             sys.exit() 
 
 #    def get_potential_energy_mcscf(self):
@@ -293,6 +319,28 @@ class OutputMOLPRO:
         l = f.readline()
         while l:
             if l.find('!MCSCF') > -1 and l.find('.1 Energy') > -1:
+                ind = int(l[l.find('.1')-1]) - 1
+                ene[ind] = float(l.split()[4])
+            
+            l = f.readline()
+        
+        try:
+            return np.array(ene)
+        except:
+            print 'no convergence'
+            sys.exit() 
+
+    def get_potential_energy_caspt2_nonmix(self,nrange):
+        try: 
+            f = open(self.wfile,'r')
+        except:
+            print 'no file of ' + self.wfile
+            sys.exit() 
+
+        ene = np.zeros(nrange) 
+        l = f.readline()
+        while l:
+            if l.find('!RSPT2') > -1 and l.find('.1 Energy') > -1:
                 ind = int(l[l.find('.1')-1]) - 1
                 ene[ind] = float(l.split()[4])
             
@@ -414,7 +462,8 @@ class OutputMOLPRO:
         # Note: For Mass Weighted Hessian printed in molpro output 
         # atomic mass unit(amu) is used , not atomic unit(au) 
        
-        natom = self.natom
+        if self.mol is None: self.mol = self.get_mol_info() 
+        natom = len(self.mol)  
         f = open(self.wfile,'r')
         l = f.readline()
         n = 3*natom
@@ -445,7 +494,8 @@ class OutputMOLPRO:
         return (hess + hess.T - np.diag(np.diag(hess)), coord) 
 
     def get_nacme(self,nrange):
-        natom = self.natom 
+        if self.mol is None: self.mol = self.get_mol_info() 
+        natom = len(self.mol)  
         try: 
             f = open(self.wfile,'r')
         except:
@@ -479,6 +529,7 @@ class OutputMOLPRO:
         else:
             return nacme 
 
+"""
 def molpro_input_parser(wfile):
      
     inp = InputMOLPRO() 
@@ -491,21 +542,13 @@ def molpro_input_parser(wfile):
 
     while l:
         l = f.readline().lower()
-
+        
         if l.find("memory") > -1:
             l1 = l.split(',')
             inp.set_memory(int(l1[1]),l1[2]) 
             switch_option = True 
             continue
-
-        if switch_option and l != '\n':
-            if l.find("sym") > -1:
-                inp.set_option(option) 
-                switch_option = False
-            else: 
-                option += l 
-                continue 
-         
+        
         if l.find("nosym") > -1:
             inp.set_symmetry(l.strip()) 
             continue 
@@ -514,15 +557,14 @@ def molpro_input_parser(wfile):
             l1 = l.split('=')
             inp.set_geomtype(l1[1]) 
             continue 
-        
+                
         if l.find("geometry") > -1:
-            
             l = f.readline().split()
             natoms = int(l[0])   
             l = f.readline()
             inp.set_title(l.strip())  
             l = f.readline()
-            sym, positions = [], [] 
+            sym, positions = [], []
             while l[0] != '}':
                 atom = l.split() 
                 sym.append(atom[0])
@@ -554,8 +596,83 @@ def molpro_input_parser(wfile):
                 inp.set_method_save(method) 
                 break
             method += l
+    #print mol.get_positions() 
     return mol, inp 
+"""
 
+def molpro_input_parser(wfile):
+     
+    inp = InputMOLPRO() 
+    f = open(wfile)
+    alist = [] 
+    switch_option = False
+    switch_method = False
+    option, method, basis = "", "", ""
+    l = True 
+
+    while l:
+        l = f.readline().lower()
+        
+        if l.find("memory") > -1:
+            l1 = l.split(',')
+            inp.set_memory(int(l1[1]),l1[2]) 
+            switch_option = True 
+            continue
+        
+        if l.find("!<option>") > -1:
+            l = f.readline().lower()
+            txt = "" 
+            while l.find("!<>") == -1:
+                txt += l 
+                l = f.readline().lower()
+            inp.set_option(txt) 
+            continue 
+ 
+        if l.find("geomtype") > -1:
+            l1 = l.split('=')
+            inp.set_geomtype(l1[1].rstrip()) 
+            continue 
+                
+        if l.find("geometry") > -1:
+            l = f.readline().split()
+            natoms = int(l[0])   
+            l = f.readline()
+            inp.set_title(l.strip())  
+            l = f.readline()
+            sym, positions = [], []
+            while l[0] != '}':
+                atom = l.split() 
+                sym.append(atom[0])
+                positions.append(map(float, atom[1:4])) 
+                l = f.readline()
+            if natoms != len(sym): print "Caution!! You need to check the \
+                number of atoms in geometry command" 
+            positions = np.array(positions) * ang2bohr
+            mol = Molecule(atomnames = sym, positions = positions)
+            inp.set_molecule(mol)
+            continue 
+        
+        if l.find("basis") > -1:
+            if l.find("{") > -1:  
+                l = f.readline()
+                while l[0] != '}':
+                    basis += l
+                    l = f.readline()
+                inp.set_basis_manual(basis)
+            else: 
+                basis = l.split('=')[1].strip()
+                inp.set_basis_keyword(basis)
+            switch_method = True
+            continue 
+
+        if switch_method:
+            if l == '---\n':
+                inp.set_method(method) 
+                inp.set_method_save(method) 
+                break
+            method += l
+    #print mol.get_positions() 
+    return mol, inp 
 
 def test():
     a = InputMOLPRO('test.com')

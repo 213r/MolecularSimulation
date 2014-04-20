@@ -43,12 +43,14 @@ def get_data(fname, start, end=float("inf")):
             if start <= time and time < end: 
                 positions, velocities = [], [] 
                 while line:
-                    if "Coordinates" in line:
+                    if "#Coordinates" in line:
                         line = f.readline() 
-                        while line != "\n":
+                        line = f.readline() 
+                        while True:
+                            if "Velocities" in line: break
                             positions.append(map(float,line.split()[1:]))       
                             line = f.readline() 
-                    if "Velocities" in line:
+                        line = f.readline() 
                         line = f.readline() 
                         while line != "\n":
                             velocities.append(map(float,line.split()[1:]))       

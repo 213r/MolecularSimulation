@@ -32,12 +32,13 @@ class VelocityVerlet(MolecularDynamics):
         MolecularDynamics.__init__(self, mol, pot, dt, nstep, restart, check_mdstop_dispersion, tlim)
         if self.pot.get_check_pbc: self.mol.set_positions(self.pot.get_pbc_adjusted(self.mol.get_positions()))  
         self.count = 0 
+        self.nrange = self.pot.get_nrange()
         self.setup_output() 
             
     def setup_output(self):
         self.woutp = WriteOutputMD()
         if self.restart: self.woutp.restart(self)
-        else: self.woutp.start()
+        else: self.woutp.start(self)
 
     def run(self):
         #this is the potential energy caluculation at the initial point 
@@ -82,19 +83,25 @@ class VelocityVerlet_QMMM(MolecularDynamics):
     
     def __init__(self, mol_qm, mol_mm, pot_qm, pot_mm, pot_qmmm, dt, nstep, \
             restart=False, check_mdstop_dispersion = False, tlim = float('inf')):
-
         MolecularDynamics.__init__(self, mol_qm, pot_qm, dt, nstep, restart, check_mdstop_dispersion, tlim)
-
         self.mol_mm = mol_mm
         self.pot_mm = pot_mm
         self.pot_qmmm = pot_qmmm 
-        if self.pot_mm.get_check_pbc: 
+        #print "position-3" 
+        #print self.mol_mm.get_positions() 
+        #print self.pot_mm.get_check_pbc 
+        if self.pot_mm.get_check_pbc(): 
             self.mol_mm.set_positions(self.pot_mm.get_pbc_adjusted(self.mol_mm.get_positions()))  
         self.count = 0
+        self.nrange = self.pot.get_nrange()
         self.setup_output() 
+        #print "position-2" 
+        #print self.mol_mm.get_positions() 
 
     def run(self):
         self.pot.calc(); self.pot_mm.calc(); self.pot_qmmm.calc()
+        #print "position-1" 
+        #print self.mol_mm.get_positions() 
         #this is for logging at initial point 
         if not  self.restart: self.woutp.logging(self)  
 
@@ -110,19 +117,25 @@ class VelocityVerlet_QMMM(MolecularDynamics):
  
     def setup_output(self):
         self.woutp = WriteOutputMD_QMMM()
-        if self.elaptime == 0.0: self.woutp.start()
+        if self.elaptime == 0.0: self.woutp.start(self)
         else: self.woutp.restart(self)
 
     def step(self):
+        #print "position0" 
+        #print self.mol_mm.get_positions() 
         dt = self.dt
-        get_accelerations_save =  self.mol.get_accelerations()
+        get_accelerations_save = self.mol.get_accelerations()
         self.mol.set_positions(self.mol.get_positions() + \
                 self.mol.get_velocities() *  dt + 0.5 * \
                 get_accelerations_save * dt * dt)
         get_accelerations_save_mm =  self.mol_mm.get_accelerations()
+        #print "position1" 
+        #print self.mol_mm.get_positions() 
         positions_mm = self.mol_mm.get_positions() + \
                 self.mol_mm.get_velocities() *  dt + 0.5 * \
                 get_accelerations_save_mm * dt * dt
+        #print "position2" 
+        #print self.mol_mm.get_positions() 
         if self.pot_mm.get_check_pbc(): 
             self.mol_mm.set_positions(self.pot_mm.get_pbc_adjusted(positions_mm)) 
         else:  self.mol_mm.set_positions(positions_mm) 

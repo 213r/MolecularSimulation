@@ -43,6 +43,8 @@ class TullySurfaceHopping(MolecularDynamics):
         self.count = 0
         self.count_tsh = 0
 
+        self.setup_output() 
+
     def setup_output(self):
         self.woutp = WriteOutputMD_TSH()
         if self.restart: self.woutp.restart(self)
@@ -76,7 +78,6 @@ class TullySurfaceHopping(MolecularDynamics):
         self.c = np.array(coefficients)
 
     def prepare(self):
-        self.setup_output() 
         self.pot.calc()
         self.pre_judge_tsh()
         self.check_ediff()
@@ -183,12 +184,12 @@ class TullySurfaceHopping_QMMM(TullySurfaceHopping):
     def __init__(self, mol_qm, mol_mm, pot_qm, pot_mm, pot_qmmm, dt, nstep, tsh_times, restart = False, \
             tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, check_mdstop_dispersion = False, tlim = float('inf')):
 
-        TullySurfaceHopping.__init__(self,mol_qm ,pot_qm, dt, nstep, tsh_times, restart,\
-            tsh_ediff_thresh, tsh_ediff_factor, check_mdstop_dispersion, tlim)
-
         self.mol_mm = mol_mm
         self.pot_mm = pot_mm
         self.pot_qmmm = pot_qmmm 
+        
+        TullySurfaceHopping.__init__(self,mol_qm ,pot_qm, dt, nstep, tsh_times, restart,\
+            tsh_ediff_thresh, tsh_ediff_factor, check_mdstop_dispersion, tlim)
 
     def setup_output(self):
         self.woutp = WriteOutputMD_TSH_QMMM()
@@ -196,7 +197,6 @@ class TullySurfaceHopping_QMMM(TullySurfaceHopping):
         else: self.woutp.start(self)
 
     def prepare(self):
-        self.setup_output() 
         self.pot.calc(); self.pot_mm.calc(); self.pot_qmmm.calc()   
         self.pre_judge_tsh()
         self.check_ediff()

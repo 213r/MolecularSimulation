@@ -2,7 +2,7 @@ from Constants import Kboltz, ang2bohr
 import numpy as np 
 from Atom import Atom 
 from Molecule import Molecule
-from math import ceil, sqrt, cos, sin 
+from math import ceil, sqrt, cos, sin, acos, asin, sqrt 
 import copy
 """
     MakeInitial Module 
@@ -97,9 +97,9 @@ def superpositioned_atoms_delete(mol_deleted, mol_super):
     for i, ni in enumerate(mol_deleted.get_atomnumbers()):
         for j, nj in enumerate(mol_super.get_atomnumbers()):
             # Currently, the specific atoms are used only.  
-            if nj == 1 and ni == 18: rlim = 3.62896 * 0.9  
-            if nj == 6 and ni == 18: rlim = 3.70352 * 0.9 
-            if nj == 8 and ni == 18: rlim = 3.83503 * 0.9 
+            if nj == 1 and ni == 18: rlim = 3.62896 * 1.1  
+            if nj == 6 and ni == 18: rlim = 3.70352 * 1.1 
+            if nj == 8 and ni == 18: rlim = 3.83503 * 1.1 
             vec_ij = mol_deleted.get_positions()[i] - mol_super.get_positions()[j] 
             if np.sum(vec_ij * vec_ij) < rlim * rlim:
                 index[i] = False
@@ -137,4 +137,31 @@ def euler_rotation(alpha, beta, gamma):
 
     return matrix_rot_x(alpha) * matrix_rot_y(beta) \
             * matrix_rot_z(gamma) 
+
+def xyz2rthetaphi(xyz):
+    """ 
+        coversion from  Spherical Polar Coordinates to Cartesian coordinates  
+        0. <= r 
+        0. <= theta <= pi 
+        0. <= phi <= 2.*pi 
+    """ 
+    xyz = np.array(xyz)
+    r = sqrt(sum(xyz*xyz))
+    theta = acos(xyz[2] / r) 
+    phi = acos(xyz[0] / r)
+    return [r, theta, phi] 
+
+def rthetaphi2xyz(rthetaphi):
+    """ 
+        coversion from Cartesian coordinates to Spherical Polar Coordinates 
+        0. <= r 
+        0. <= theta <= pi 
+        0. <= phi <= 2.*pi 
+    """ 
+    rthetaphi = np.array(rthetaphi)
+    r = rthetaphi[0]  
+    theta = rthetaphi[1]  
+    phi = rthetaphi[2]  
+    return [r * sin(theta) * cos(phi), r * sin(theta) * sin(phi), r * cos(theta)] 
+
 

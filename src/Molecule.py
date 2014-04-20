@@ -60,7 +60,6 @@ class Molecule:
             assert np.shape(forces) == (self.natoms,self.ndims), "Molecule class size error" 
             self.forces = np.array(forces)
 
-
     def __len__(self):
         return self.natoms
 
@@ -95,9 +94,13 @@ class Molecule:
         return self.positions[i]
     
     def set_positions(self, positions, unit='bohr'): 
-        self.positions = np.array(positions)
-        if unit == "ang": self.positions *= ang2bohr 
- 
+        p = np.array(positions)
+        if self.natoms != len(p): 
+            print "the length of the positions array is invalid!"
+            sys.exit() 
+        if unit == "ang": p *= ang2bohr 
+        self.positions = p 
+
     def set_positions_index(self, i, position,  unit='bohr'): 
         x = np.array(position)  
         if unit == "ang": x *= ang2bohr 
@@ -108,6 +111,9 @@ class Molecule:
     
     def set_velocities(self, velocities, unit='bohr/tau'):
         v = np.array(velocities)
+        if self.natoms != len(v): 
+            print "the length of the velocities array is invalid!"
+            sys.exit() 
         if unit == 'ang/fs': v *= bohr2ang / tau2fs 
         self.velocities = v 
     
@@ -130,7 +136,7 @@ class Molecule:
     
     def get_forces(self):
         return self.forces 
-    
+  
     def set_forces(self, forces):
         if forces.shape != (self.natoms,self.ndims):
             print "the shape of forces is incorrect"
@@ -170,10 +176,15 @@ class Molecule:
             else: x -= 1.e-15
         return acos(x)   
 
-    def get_positions_formated(self, unit='bohr', label = True):
+    def get_positions_formated(self, unit='bohr', label = True, message = None):
         str = "    {}".format(self.natoms)
-        if label: str += "   #Coordinates [{}] \n\n".format(unit)
-        else: str += "\n\n"
+        if label: 
+            if message == None: str += "   #Coordinates [{}] \n\n".format(unit) 
+            else: str += "   #Coordinates [{}] {} \n\n".format(unit,message) 
+        else: 
+            if message == None: str += "\n\n"  
+            else: str += "    {} \n\n".format(message) 
+            
         for i in xrange(self.natoms):
             sym = self.atomnames[i]
             if unit == 'bohr': coord = self.positions[i]
@@ -184,14 +195,19 @@ class Molecule:
             str += "{:s}   {:15.8f}   {:15.8f}   {:15.8f}\n".format(sym,*coord) 
         return str 
 
-    def get_velocities_formated(self, unit='bohr/tau', label = True):
+    def get_velocities_formated(self, unit='bohr/tau', label = True, message = None):
         str = "    {}".format(self.natoms)
-        if label: str += "   #Velocities [{}] \n\n".format(unit)
-        else: str += "\n\n"
+        if label: 
+            if message == None: str += "   #Velocities [{}] \n\n".format(unit) 
+            else: str += "   #Velocities [{}] {} \n\n".format(unit,message) 
+        else: 
+            if message == None: str += "\n\n"  
+            else: str += "    {} \n\n".format(message) 
+ 
         for i in xrange(self.natoms):
             sym = self.atomnames[i]
             if unit == 'bohr/tau': vel = self.velocities[i]
-            elif unit == 'ang/fs': vel = self.positions[i] * bohr2ang / tau2fs
+            elif unit == 'ang/fs': vel = self.velocities[i] * bohr2ang / tau2fs
             else: 
                 print 'Error: the unit of positions is wrong'
                 sys.exit() 
@@ -227,15 +243,30 @@ class Molecule:
                 velocities = self.velocities[index],
                 forces = self.forces[index], ndims = self.ndims) 
 
-    def read_coord_from_file(self, file):
+    def read_coord_from_file(self, file, unit="bohr"):
         f = open(file)
-        self.positions = np.array([map(float,i.split()) for i in f.readlines()])
-    
-    def read_velocity_from_file(self, file):
+        positions = np.array([map(float,i.split()) for i in f.readlines()])
+        self.set_positions(positions, unit)
+
+    def read_velocity_from_file(self, file, unit="bohr/tau"):
         f = open(file)
-        self.velocities = np.array([map(float,i.split()) for i in f.readlines()])
+        velocities = np.array([map(float,i.split()) for i in f.readlines()])
+        self.set_velocities(velocities, unit)
+
+    def move2centermass(self):
+        m = self.masses
+        centermass = np.sum(m[:,np.newaxis] * self.positions,axis=0) / np.sum(m) 
+        self.positions -= centermass
+        return centermass 
+
+def atom2mol(atom):
+    return Molecule(atomnames=[atom.GetChemicalSymbol()],positions=[atom.GetCartesianPosition()], \
+    velocities=[atom.GetCartesianVelocity()],forces=[atom.GetCartesianForce()]) 
 
 def bind_molecule(mol1, mol2):
+    if isinstance(mol1,Atom): mol1 = atom2mol(mol1) 
+    if isinstance(mol2,Atom): mol2 = atom2mol(mol2) 
+     
     atomnumbers = np.r_[mol1.get_atomnumbers(), mol2.get_atomnumbers()]
     positions = np.r_[mol1.get_positions(), mol2.get_positions()]
     velocities = np.r_[mol1.get_velocities(), mol2.get_velocities()]

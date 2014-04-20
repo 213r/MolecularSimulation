@@ -52,6 +52,9 @@ class Atom:
         self.SetMagneticMoment(magmom)
         self.SetTag(tag)
 
+    def __name__(self):
+        return "Atom" 
+
     def __repr__(self):
         return "%s %s" % (self.symbol, self.position[:])
 

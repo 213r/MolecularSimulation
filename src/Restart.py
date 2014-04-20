@@ -11,15 +11,18 @@
 def restart_mc(fname):
     with open(fname,'r') as f: 
         positions = [] 
+        chk = True
         line = f.readline() 
         while line:
             if "Step" in line: nstep = float(line.split()[2])
-            if "Coordinates" in line:
+            if ("#Coordinates" in line) and chk:
+                chk = False  
                 natom = int(line.split()[0])  
                 line = f.readline() 
                 for _ in xrange(natom): positions.append(map(float, f.readline().split()[1:]))
             line = f.readline() 
         return positions 
+
 
 def restart_md(fname):
     with open(fname,'r') as f: 

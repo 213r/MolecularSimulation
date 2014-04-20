@@ -1,4 +1,3 @@
-
 def read_xyz(fname, freq = 1):
     with open(fname) as f:
         line = f.readline()
