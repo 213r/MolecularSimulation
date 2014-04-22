@@ -19,6 +19,7 @@ class InputMOLPRO:
         self.method = 'hf'
         self.mem_unit = 'm'
         #self.initialize()
+        self.addmethod = "\n"
         self.symmetry = 'nosym'
 
         self.wfile = "tmp.com"
@@ -65,6 +66,9 @@ class InputMOLPRO:
 
     def set_method(self, method):
         self.method = method 
+    
+    def add_method(self, method):
+        self.addmethod += method
     
     def set_method_save(self, method):
         self.method_save = method 
@@ -155,8 +159,10 @@ class InputMOLPRO:
 
         input_txt += '\n\n'
         input_txt += self.method
-        input_txt += '\n\n---'
+        input_txt += self.addmethod
+        input_txt += '\n---'
 
+        self.addmethod = "\n"
         self.input_txt = input_txt
 
     def write(self):

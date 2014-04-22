@@ -78,7 +78,7 @@ class TullySurfaceHopping(MolecularDynamics):
         self.c = np.array(coefficients)
 
     def prepare(self):
-        self.pot.calc()
+        self.pot.calc(self.count)
         self.pre_judge_tsh()
         self.check_ediff()
     
@@ -88,7 +88,7 @@ class TullySurfaceHopping(MolecularDynamics):
         self.mol.set_positions(self.mol.get_positions() + \
                 self.mol.get_velocities() *  dt + 0.5 * \
                 get_accelerations_save * dt * dt)
-        self.pot.calc() 
+        self.pot.calc(self.count) 
         self.mol.set_velocities(self.mol.get_velocities() + \
                 0.5 * (self.mol.get_accelerations() + \
                 get_accelerations_save) * dt)
@@ -197,7 +197,7 @@ class TullySurfaceHopping_QMMM(TullySurfaceHopping):
         else: self.woutp.start(self)
 
     def prepare(self):
-        self.pot.calc(); self.pot_mm.calc(); self.pot_qmmm.calc()   
+        self.pot.calc(self.count); self.pot_mm.calc(); self.pot_qmmm.calc()   
         self.pre_judge_tsh()
         self.check_ediff()
 
@@ -211,12 +211,46 @@ class TullySurfaceHopping_QMMM(TullySurfaceHopping):
         self.mol_mm.set_positions(self.mol_mm.get_positions() + \
                 self.mol_mm.get_velocities() *  dt + 0.5 * \
                 get_accelerations_save_mm * dt * dt)
-        self.pot.calc(); self.pot_mm.calc(); self.pot_qmmm.calc()   
+        self.pot.calc(self.count); self.pot_mm.calc(); self.pot_qmmm.calc()   
         self.mol.set_velocities(self.mol.get_velocities() + \
                 0.5 * (self.mol.get_accelerations() + \
                 get_accelerations_save) * dt)
         self.mol_mm.set_velocities(self.mol_mm.get_velocities() + \
                 0.5 * (self.mol_mm.get_accelerations() + \
                 get_accelerations_save_mm) * dt)
+        self.elaptime += dt 
+
+class TullySurfaceHopping_QMMM_Rigid(TullySurfaceHopping):
+    
+    def __init__(self, mol_qm, mol_mm, pot_qm, pot_mm, pot_qmmm, dt, nstep, tsh_times, restart = False, \
+            tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, check_mdstop_dispersion = False, tlim = float('inf')):
+
+        self.mol_mm = mol_mm
+        self.pot_mm = pot_mm
+        self.pot_qmmm = pot_qmmm 
+        
+        TullySurfaceHopping.__init__(self,mol_qm ,pot_qm, dt, nstep, tsh_times, restart,\
+            tsh_ediff_thresh, tsh_ediff_factor, check_mdstop_dispersion, tlim)
+
+    def setup_output(self):
+        self.woutp = WriteOutputMD_TSH_QMMM()
+        if self.restart: self.woutp.restart(self)
+        else: self.woutp.start(self)
+
+    def prepare(self):
+        self.pot.calc(self.count); self.pot_mm.calc(); self.pot_qmmm.calc()   
+        self.pre_judge_tsh()
+        self.check_ediff()
+
+    def step(self):
+        dt = self.dt
+        get_accelerations_save =  self.mol.get_accelerations()
+        self.mol.set_positions(self.mol.get_positions() + \
+                self.mol.get_velocities() *  dt + 0.5 * \
+                get_accelerations_save * dt * dt)
+        self.pot.calc(self.count); self.pot_qmmm.calc()   
+        self.mol.set_velocities(self.mol.get_velocities() + \
+                0.5 * (self.mol.get_accelerations() + \
+                get_accelerations_save) * dt)
         self.elaptime += dt 
 
