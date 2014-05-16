@@ -182,7 +182,7 @@ class Molecule:
         vkl = self.positions[l] - self.positions[k]
         vi_pro = vji - np.dot(vjk,vji) / np.dot(vjk, vjk) * vjk   
         vl_pro = vkl + np.dot(vjk,vkl) / np.dot(vjk, vjk) * vjk   
-        x = np.dot(vi_pro,vl_pro) / sqrt(np.dot(vi_pro) * np.dot(vl_pro)) 
+        x = np.dot(vi_pro,vl_pro) / sqrt(np.dot(vi_pro, vi_pro) * np.dot(vl_pro, vl_pro)) 
         if abs(x) > 1.0:
             if x < 0.0: x += 1.e-15 
             else: x -= 1.e-15
