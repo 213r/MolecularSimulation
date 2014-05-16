@@ -30,7 +30,7 @@ class VelocityVerlet(MolecularDynamics):
     def __init__(self, mol, pot, dt, nstep, restart=False, check_mdstop_dispersion = False,\
             tlim = float('inf')):
         MolecularDynamics.__init__(self, mol, pot, dt, nstep, restart, check_mdstop_dispersion, tlim)
-        if self.pot.get_check_pbc: self.mol.set_positions(self.pot.get_pbc_adjusted(self.mol.get_positions()))  
+        if self.pot.get_check_pbc: self.mol.set_positions(self.pot.get_pbc_adjusted(self.mol.get_positions())) 
         self.count = 0 
         self.nrange = self.pot.get_nrange()
         self.setup_output() 
@@ -53,7 +53,8 @@ class VelocityVerlet(MolecularDynamics):
             self.count += 1
             self.woutp.logging(self)
             self.mdstop_time_trans()
-            if self.check_mdstop_dispersion: self.mdstop_atom_dispersion()
+            if self.mdstop_time_trans(): break
+            if self.check_mdstop_dispersion and self.mdstop_atom_dispersion(): break
         self.woutp.finalize(self)
  
     def step(self):
@@ -106,12 +107,13 @@ class VelocityVerlet_QMMM(MolecularDynamics):
         if not  self.restart: self.woutp.logging(self)  
 
         # loop for MD 
-        for _ in xrange(self.nstep):
-            self.step()
+        while self.count < self.step:
             self.count += 1 
+            self.step()
             self.woutp.logging(self)
             self.mdstop_time_trans()
-            if self.check_mdstop_dispersion: self.mdstop_atom_dispersion()
+            if self.mdstop_time_trans(): break
+            if self.check_mdstop_dispersion and self.mdstop_atom_dispersion(): break
 
         self.woutp.finalize(self)
  

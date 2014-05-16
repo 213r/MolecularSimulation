@@ -97,9 +97,10 @@ def superpositioned_atoms_delete(mol_deleted, mol_super):
     for i, ni in enumerate(mol_deleted.get_atomnumbers()):
         for j, nj in enumerate(mol_super.get_atomnumbers()):
             # Currently, the specific atoms are used only.  
-            if nj == 1 and ni == 18: rlim = 3.62896 * 1.1  
-            if nj == 6 and ni == 18: rlim = 3.70352 * 1.1 
-            if nj == 8 and ni == 18: rlim = 3.83503 * 1.1 
+            if nj == 1 and ni == 18: rlim = 4.43 * 0.9  
+            if nj == 6 and ni == 18: rlim = 5.48 * 0.9 
+            if nj == 8 and ni == 18: rlim = 5.43 * 0.9 
+            if nj == 18 and ni == 18: rlim = 6.54 * 0.9 
             vec_ij = mol_deleted.get_positions()[i] - mol_super.get_positions()[j] 
             if np.sum(vec_ij * vec_ij) < rlim * rlim:
                 index[i] = False

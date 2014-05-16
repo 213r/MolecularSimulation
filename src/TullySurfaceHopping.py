@@ -68,11 +68,10 @@ class TullySurfaceHopping(MolecularDynamics):
 
             self.woutp.logging(self)
         
-            self.mdstop_time_trans()
-            if self.check_mdstop_dispersion: self.mdstop_atom_dispersion()
+            if self.mdstop_time_trans(): break
+            if self.check_mdstop_dispersion and self.mdstop_atom_dispersion(): break
 
         self.woutp.finalize(self)
-
 
     def set_coefficients(self, coefficients):
         self.c = np.array(coefficients)
@@ -188,6 +187,9 @@ class TullySurfaceHopping_QMMM(TullySurfaceHopping):
         self.pot_mm = pot_mm
         self.pot_qmmm = pot_qmmm 
         
+        if self.pot_mm.get_check_pbc: 
+            self.mol_mm.set_positions(self.pot_mm.get_pbc_adjusted(self.mol_mm.get_positions()))  
+        
         TullySurfaceHopping.__init__(self,mol_qm ,pot_qm, dt, nstep, tsh_times, restart,\
             tsh_ediff_thresh, tsh_ediff_factor, check_mdstop_dispersion, tlim)
 
@@ -211,6 +213,8 @@ class TullySurfaceHopping_QMMM(TullySurfaceHopping):
         self.mol_mm.set_positions(self.mol_mm.get_positions() + \
                 self.mol_mm.get_velocities() *  dt + 0.5 * \
                 get_accelerations_save_mm * dt * dt)
+        if self.pot_mm.get_check_pbc: 
+            self.mol_mm.set_positions(self.pot_mm.get_pbc_adjusted(self.mol_mm.get_positions()))  
         self.pot.calc(self.count); self.pot_mm.calc(); self.pot_qmmm.calc()   
         self.mol.set_velocities(self.mol.get_velocities() + \
                 0.5 * (self.mol.get_accelerations() + \
@@ -224,7 +228,6 @@ class TullySurfaceHopping_QMMM_Rigid(TullySurfaceHopping):
     
     def __init__(self, mol_qm, mol_mm, pot_qm, pot_mm, pot_qmmm, dt, nstep, tsh_times, restart = False, \
             tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, check_mdstop_dispersion = False, tlim = float('inf')):
-
         self.mol_mm = mol_mm
         self.pot_mm = pot_mm
         self.pot_qmmm = pot_qmmm 

@@ -5,6 +5,7 @@ from datetime import datetime
 from Restart import restart_mc, restart_md, restart_md_qmmm
 from Constants import ang2bohr,bohr2ang, fs2tau, tau2fs
 import sys,os
+BIG_NUM = 1e8
 
 class WriteOutput:
     # This class must be overrided. 
@@ -13,7 +14,7 @@ class WriteOutput:
     def __init__(self):
  
         self.time_start = datetime.now()   # log the time when MD starts
-        self.freq_xyz, self.freq_energy, self.freq_trj, self.freq_vel_xyz = 0, 0, 0, 0 
+        self.freq_xyz, self.freq_energy, self.freq_trj, self.freq_vel_xyz = 0, 0, 0, BIG_NUM 
         self.count_xyz, self.count_energy, self.count_trj, self.count_vel_xyz = 0, 0, 0, 0 
         self.count = 0
 
@@ -237,7 +238,7 @@ class WriteOutputMD_QMMM(WriteOutput):
         if self.count_vel_xyz == self.freq_vel_xyz:
             self.count_vel_xyz = 0
             mol_tot = bind_molecule(self_md.mol,self_md.mol_mm) 
-            mess = "Time: {} fs  [bohr/tau]".format(self_md.elaptime * tau2fs) 
+            mess = "No.{} Time: {} fs [bohr/tau]".format(self_md.count, self_md.elaptime * tau2fs) 
             with open(self.file_vel_xyz,'a') as f: 
                 f.write(mol_tot.get_velocities_formated(unit="bohr/tau",label=False,message=mess))   
         else: self.count_vel_xyz += 1 

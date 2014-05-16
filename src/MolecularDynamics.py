@@ -42,7 +42,8 @@ class MolecularDynamics:
         if self.tlim < self.elaptime:
             self.woutp.finalize(self)
             self.woutp.write_log_message("MD is terminated because time limitation is transcended.")
-            sys.exit()
+            return True
+        else: return False
 
     def mdstop_atom_dispersion(self,rlim = 10*ang2bohr): 
         coord =  self.mol.get_positions()
@@ -52,5 +53,6 @@ class MolecularDynamics:
                 if np.sum(x*x) > rlim * rlim:
                     self.woutp.finalize(self)
                     self.woutp.write_log_message("MD is terminated because of the large dispersion of atoms.")
-                    sys.exit()
+                    return True
+        return False
 

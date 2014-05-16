@@ -88,33 +88,34 @@ class InputMOLPRO:
     def get_method_save(self):
         return self.method_save
     
-    def set_cpmcscf_istate(self,now_state,nrange):
+    def set_cpmcscf_istate(self,now_state,nrange, q_nacm):
         
         str_method = self.method_save
         str_method = str_method.replace("<nrange>", str(nrange)) 
-
+        
         num = 5100.1 
         keyword_cpmcscf = "cpmcscf,grad,{0:d}.1,acc=1.d-8,record={1:4.1f}\n" \
                 .format(now_state+1,num)
         keyword_force = "force;samc,{0:4.1f}\n".format(num) 
-
-        for i in xrange(2):
+        
+        if q_nacm:  
+            for i in xrange(2):
                 
-            if i == 0 and now_state == 0: continue
-            if i == 1 and now_state == nrange-1: continue
+                if i == 0 and now_state == 0: continue
+                if i == 1 and now_state == nrange-1: continue
             
-            if i == 0: st_i, st_j = now_state, now_state + 1 
-            if i == 1: st_i, st_j = now_state+1, now_state + 2 
+                if i == 0: st_i, st_j = now_state, now_state + 1 
+                if i == 1: st_i, st_j = now_state+1, now_state + 2 
             
-            num += 100
-            keyword_cpmcscf += "cpmcscf,nacm,{0:d}.1,{1:d}.1,acc=1.d-8,record={2:4.1f}\n" \
-                .format(st_i, st_j,num)
-            keyword_force += "force;samc,{0:4.1f}\n".format(num) 
+                num += 100
+                keyword_cpmcscf += "cpmcscf,nacm,{0:d}.1,{1:d}.1,acc=1.d-8,record={2:4.1f}\n" \
+                    .format(st_i, st_j,num)
+                keyword_force += "force;samc,{0:4.1f}\n".format(num) 
 
         str_method = str_method.replace("<cpmcscf>", keyword_cpmcscf) 
         self.method = str_method.replace("<force>", keyword_force) 
 
-    def set_caspt2_istate(self,now_state,nrange):
+    def set_caspt2_istate(self,now_state,nrange, q_nacm):
 
         str_method = self.method_save
         str_method = str_method.replace("<nrange>", str(nrange)) 
@@ -122,15 +123,16 @@ class InputMOLPRO:
         keyword_cpmcscf, keyword_force = "", ""
         num = 5100.1 
 
-        for i in xrange(nrange-1):
-            for j in xrange(i+1,nrange):
-                num += 100
-                keyword_cpmcscf += "cpmcscf,nacm,{0:d}.1,{1:d}.1,acc=1.d-8,record={2:4.1f}\n" \
-                    .format(i+1,j+1,num)
-                keyword_force += "force;samc,{0:4.1f}\n".format(num) 
-        str_method = str_method.replace("<cpmcscf>", keyword_cpmcscf) 
-        self.method = str_method.replace("<force>", keyword_force) 
-
+        if q_nacm:
+            for i in xrange(nrange-1):
+                for j in xrange(i+1,nrange):
+                    num += 100
+                    keyword_cpmcscf += "cpmcscf,nacm,{0:d}.1,{1:d}.1,acc=1.d-8,record={2:4.1f}\n" \
+                        .format(i+1,j+1,num)
+                    keyword_force += "force;samc,{0:4.1f}\n".format(num) 
+            str_method = str_method.replace("<cpmcscf>", keyword_cpmcscf) 
+            str_method = str_method.replace("<force>", keyword_force) 
+        self.method = str_method
 
     def make_input(self):
         input_txt = '' 

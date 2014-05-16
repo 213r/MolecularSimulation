@@ -173,7 +173,7 @@ class Potential_QM_CASSCF(Potential_QM):
     def __init__(self, mol, inp, now_state, nrange):
         Potential_QM.__init__(self, mol, inp, nrange)
         self.now_state = now_state
-        self.inp.set_cpmcscf_istate(self.now_state,self.nrange) 
+        self.inp.set_cpmcscf_istate(self.now_state,self.nrange, False) 
     
     def get_potential_energy_multi(self):
         self.ene_multi = self.outp.get_potential_energy_mcscf_multi(self.nrange)
@@ -192,14 +192,18 @@ class Potential_QM_CASPT2(Potential_QM):
         Potential_QM.__init__(self, mol, inp, nrange)
 
         self.now_state = now_state
-        self.inp.set_caspt2_istate(self.now_state,self.nrange) 
+        self.inp.set_caspt2_istate(self.now_state,self.nrange, False) 
     
     def get_potential_energy_multi(self):
         self.ene_multi = np.array([i for i in self.outp.get_data_caspt2_multi(self.nrange)[0]])
         return self.ene_multi 
 
+    def get_potential_energy(self):
+        print self.ene_multi
+        return self.ene_multi[self.now_state]
+
     def get_gradient(self):
-        return self.ene_multi(self.now_state) 
+        return self.outp.get_gradient_multi(self.now_state) 
 
 class Potential_TSH(Potential_QM):
 
@@ -264,7 +268,7 @@ class Potential_TSH_CASSCF(Potential_TSH):
 
     def set_now_state(self,now_state):
         self.now_state = now_state
-        self.inp.set_cpmcscf_istate(self.now_state,self.nrange) 
+        self.inp.set_cpmcscf_istate(self.now_state,self.nrange, True) 
 
     def get_potential_energy_multi(self):
         return self.outp.get_potential_energy_mcscf_multi(self.nrange)
@@ -278,18 +282,17 @@ class Potential_TSH_CASSCF(Potential_TSH):
 
 class Potential_TSH_CASPT2(Potential_TSH):
 
-    def __init__(self, mol, inp, now_state, nrange,freq_molden=10):
+    def __init__(self, mol, inp, now_state, nrange, freq_molden=10):
         Potential_TSH.__init__(self, mol, inp, now_state, nrange)
         #super(Potential_TSH_CASPT2, self).__init__(mol, inp, now_state, nrange)
         self.setup()
 
     def set_now_state(self,now_state):
         self.now_state = now_state
-        self.inp.set_caspt2_istate(self.now_state,self.nrange) 
+        self.inp.set_caspt2_istate(self.now_state,self.nrange, False) 
 
     def setup(self):
         self.eps = 0.01
-        
         dinp = deepcopy(self.inp)
         dinp.set_inputname("tmp2.com")
         s = dinp.get_method_save().replace("<force>\n","")
