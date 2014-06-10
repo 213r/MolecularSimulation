@@ -16,6 +16,7 @@ class WriteOutput:
         self.time_start = datetime.now()   # log the time when MD starts
         self.freq_xyz, self.freq_energy, self.freq_trj, self.freq_vel_xyz = 0, 0, 0, BIG_NUM 
         self.count_xyz, self.count_energy, self.count_trj, self.count_vel_xyz = 0, 0, 0, 0 
+        self.q_add = False 
         self.count = 0
 
     def set_freq_xyz(self, freq):
@@ -54,6 +55,10 @@ class WriteOutput:
     def logging(self, self_simu):
         pass 
 
+    def switch_add(self):
+        self.file_add = "file_add.dat" 
+        self.q_add = True
+    
     def write_xyz(self,self_simu):
         if self.count_xyz == self.freq_xyz:
             self.count_xyz = 0
@@ -87,7 +92,15 @@ class WriteOutput:
 
     def write_log_message(self,message):
         with open(self.file_log,'a') as f: f.write(message)  
-            
+       
+    def write_additional(self, self_simu):
+        add = self_simu.mol.get_addinfo() 
+        txt = "" 
+        txt += "{0: 4.2f} ".format(self_simu.elaptime*tau2fs)
+        for i in add: txt += " {0: 8.6f} ".format(i)
+        txt += "\n"
+        with open(self.file_add,'a') as f: f.write(txt) 
+
 class WriteOutputMC(WriteOutput):
 
     def __init__(self): 
@@ -169,6 +182,7 @@ class WriteOutputMD(WriteOutput):
         self.write_xyz(self_md)
         self.write_trj(self_md)
         self.write_energy(self_md)
+        if self.q_add: self.write_additional(self_md)
 
     def write_energy(self,self_md):
         if self.count_energy == self.freq_energy:
@@ -188,7 +202,6 @@ class WriteOutputMD(WriteOutput):
             f.write('Time = {0} [tau]\n'.format(str(self_md.elaptime)))
             f.write(self_md.mol.get_positions_formated(unit='bohr'))  
             f.write(self_md.mol.get_velocities_formated(unit='bohr/tau'))  
-
         time_start = self.time_start ; time_end = datetime.now()
         with open(self.file_log,'a') as f: 
             f.write("MD ends at {0:%Y-%m-%d %H:%M:%S}\n".format(time_end))
@@ -224,7 +237,8 @@ class WriteOutputMD_QMMM(WriteOutput):
         self.write_vel_xyz(self_md)
         self.write_trj(self_md)
         self.write_energy(self_md)
- 
+        if self.q_add: self.write_additional(self_md)
+
     def write_xyz(self,self_md):
         if self.count_xyz == self.freq_xyz:
             self.count_xyz = 0

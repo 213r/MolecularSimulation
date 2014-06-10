@@ -95,11 +95,12 @@ class Potential_QMMM(Potential_MM):
 
 class Potential_QM:
     
-    def __init__(self, mol, inp, nrange = 1, freq_molden = 10):
+    def __init__(self, mol, inp, nrange = 1, freq_molden = -1):
         self.mol = mol
         self.inp = inp
         self.nrange = nrange
         self.freq_molden = freq_molden 
+        self.count_molden = 0
         if str(self.inp) == "InputMOLPRO":
             root, ext = os.path.splitext(self.inp.get_inputname())
             self.outp = OutputMOLPRO(root + ".out", self.mol)
@@ -108,16 +109,18 @@ class Potential_QM:
         if mol is None: mol = self.mol 
         self.outp = OutputMOLPRO(wfile, self.mol)
 
-    def calc(self, count_molden = -1):
+    def calc(self):
         self.inp.set_molecule(self.mol) 
         self.inp.make_input()
-        if count_molden > -1 and count_molden % self.freq_molden == 0:
-            self.inp.add_method("put, molden, tmp_{}.molden".format(count_molden))
+        if self.freq_molden > -1 and self.count_molden % self.freq_molden == 0:
+            self.inp.add_method("put, molden, tmp_{}.molden".format(self.count_molden))
         self.inp.write()
         os.system(self.inp.get_command())            
         self.mol.set_potential_energy_multi(self.get_potential_energy_multi())
         self.mol.set_potential_energy(self.get_potential_energy())
         self.mol.set_forces(-self.get_gradient())
+        self.mol.set_addinfo(self.get_addinfo())
+        self.count_molden += 1
 
     def get_check_pbc(self):
         return False 
@@ -136,6 +139,9 @@ class Potential_QM:
 
     def get_nrange(self):
         return self.nrange
+
+    def get_addinfo(self):
+        return [] 
 
 class Potential_QM_RHF(Potential_QM):
 
@@ -185,7 +191,6 @@ class Potential_QM_CASSCF(Potential_QM):
     def get_gradient(self):
         return self.outp.get_gradient_multi(self.now_state) 
 
-
 class Potential_QM_CASPT2(Potential_QM):
     
     def __init__(self, mol, inp, now_state, nrange):
@@ -199,11 +204,16 @@ class Potential_QM_CASPT2(Potential_QM):
         return self.ene_multi 
 
     def get_potential_energy(self):
-        print self.ene_multi
+        #print self.ene_multi
         return self.ene_multi[self.now_state]
 
     def get_gradient(self):
         return self.outp.get_gradient_multi(self.now_state) 
+
+    def get_addinfo(self):
+        ene_multi = self.outp.get_potential_energy_mcscf_multi(self.nrange)
+        print ene_multi 
+        return ene_multi
 
 class Potential_TSH(Potential_QM):
 
@@ -215,16 +225,17 @@ class Potential_TSH(Potential_QM):
     
         self.set_now_state(self.now_state) 
 
-    def calc(self, count_molden = -1):
+    def calc(self):
         self.inp.set_molecule(self.mol) 
         self.inp.make_input()
-        if count_molden > -1 and count_molden % self.freq_molden == 0:
-            self.inp.add_method("put, molden, tmp_{}.molden".format(count_molden))
+        if self.freq_molden > -1 and self.count_molden % self.freq_molden == 0:
+            self.inp.add_method("put, molden, tmp_{}.molden".format(self.count_molden))
         self.inp.write()
         os.system(self.inp.get_command())
         self.check_nacme_sign() 
         self.mol.set_potential_energy_multi(self.get_potential_energy_multi())
         self.mol.set_forces(-self.get_gradient())
+        self.count_molden += 1
 
     def set_now_state(self,now_state):
         pass 

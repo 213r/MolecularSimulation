@@ -268,7 +268,7 @@ class OutputMOLPRO:
         if len(ene_ary) > 1: return ene_ary 
         elif len(ene_ary) == 1: return ene_ary[0]
         else: 
-            print  "No the energy at ccsd(t) level found"
+            print  "No the energy at mp2 level found"
             sys.exit() 
 
 
@@ -308,28 +308,6 @@ class OutputMOLPRO:
             if l.find('!MCSCF') > -1 and l.find('.1 Energy') > -1:
                 ind = int(l[l.find('.1')-1]) - 1
                 ene[ind] = float(l.split()[4])
-            l = f.readline()
-        
-        try:
-            return np.array(ene)
-        except:
-            print 'no convergence'
-            sys.exit() 
-
-    def get_potential_energy_mcscf_multi(self,nrange):
-        try: 
-            f = open(self.wfile,'r')
-        except:
-            print 'no file of ' + self.wfile
-            sys.exit() 
-
-        ene = np.zeros(nrange) 
-        l = f.readline()
-        while l:
-            if l.find('!MCSCF') > -1 and l.find('.1 Energy') > -1:
-                ind = int(l[l.find('.1')-1]) - 1
-                ene[ind] = float(l.split()[4])
-            
             l = f.readline()
         
         try:

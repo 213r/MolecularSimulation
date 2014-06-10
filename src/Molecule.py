@@ -81,12 +81,21 @@ class Molecule:
                    forces = self.forces,\
                    ndims = self.ndims)
 
+    def set_addinfo(self,addinfo):
+        self.addinfo = addinfo
+    
+    def get_addinfo(self):
+        return self.addinfo 
+    
     def get_atomnames(self):
         return self.atomnames 
 
     def get_atomnumbers(self):
         return self.atomnumbers
 
+    def get_atomnumbers(self):
+        return self.atomnumbers
+    
     def get_positions(self):
         return self.positions
     
@@ -176,18 +185,33 @@ class Molecule:
             else: x -= 1.e-15
         return acos(x)   
 
+#    def get_dihedral(self,i,j,k,l):
+#        vji = self.positions[i] - self.positions[j]
+#        vjk = self.positions[k] - self.positions[j]
+#        vkl = self.positions[l] - self.positions[k]
+#        norm_vjk = np.dot(vjk, vjk)
+#        vi_pro = vji - np.dot(vjk,vji) / norm_vjk * vjk   
+#        vl_pro = vkl + np.dot(vjk,vkl) / norm_vjk * vjk   
+#        x = np.dot(vi_pro,vl_pro) / sqrt(np.dot(vi_pro, vi_pro) * np.dot(vl_pro, vl_pro)) 
+#        if abs(x) > 1.0:
+#            if x < 0.0: x += 1.e-15 
+#            else: x -= 1.e-15
+#        return acos(x)   
+
     def get_dihedral(self,i,j,k,l):
-        vji = self.positions[i] - self.positions[j]
-        vjk = self.positions[k] - self.positions[j]
-        vkl = self.positions[l] - self.positions[k]
-        vi_pro = vji - np.dot(vjk,vji) / np.dot(vjk, vjk) * vjk   
-        vl_pro = vkl + np.dot(vjk,vkl) / np.dot(vjk, vjk) * vjk   
-        x = np.dot(vi_pro,vl_pro) / sqrt(np.dot(vi_pro, vi_pro) * np.dot(vl_pro, vl_pro)) 
+        v_ji = self.positions[i] - self.positions[j]
+        v_jk = self.positions[k] - self.positions[j]
+        v_kl = self.positions[l] - self.positions[k]
+        v_kj = -v_jk 
+        v_ijk = np.cross(v_ji,v_jk) 
+        v_jkl = np.cross(v_kj,v_kl) 
+        #print v_ijk, v_jkl
+        x = np.dot(v_ijk,v_jkl) / sqrt(np.dot(v_ijk, v_ijk) * np.dot(v_jkl, v_jkl)) 
         if abs(x) > 1.0:
             if x < 0.0: x += 1.e-15 
             else: x -= 1.e-15
-        return acos(x)   
- 
+        return acos(x)
+
     def get_positions_formated(self, unit='bohr', label = True, message = None):
         str = "    {}\n".format(self.natoms)
         if label: 

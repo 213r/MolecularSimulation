@@ -12,7 +12,6 @@ class TullySurfaceHopping(MolecularDynamics):
     """ 
     Tully Surface Hopping method 
         is for dealng with non adiabatic transition process during classical MD simulation. 
-        This is regarded as a instant hopping to the other state.  
 
          J. C. Tully, J. Chem. Phys. 93, 1061 (1990).
     
@@ -77,7 +76,8 @@ class TullySurfaceHopping(MolecularDynamics):
         self.c = np.array(coefficients)
 
     def prepare(self):
-        self.pot.calc(self.count)
+        #self.pot.calc(self.count)
+        self.pot.calc()
         self.pre_judge_tsh()
         self.check_ediff()
     
@@ -87,7 +87,8 @@ class TullySurfaceHopping(MolecularDynamics):
         self.mol.set_positions(self.mol.get_positions() + \
                 self.mol.get_velocities() *  dt + 0.5 * \
                 get_accelerations_save * dt * dt)
-        self.pot.calc(self.count) 
+        #self.pot.calc(self.count) 
+        self.pot.calc() 
         self.mol.set_velocities(self.mol.get_velocities() + \
                 0.5 * (self.mol.get_accelerations() + \
                 get_accelerations_save) * dt)
@@ -199,7 +200,8 @@ class TullySurfaceHopping_QMMM(TullySurfaceHopping):
         else: self.woutp.start(self)
 
     def prepare(self):
-        self.pot.calc(self.count); self.pot_mm.calc(); self.pot_qmmm.calc()   
+        #self.pot.calc(self.count); self.pot_mm.calc(); self.pot_qmmm.calc()   
+        self.pot.calc(); self.pot_mm.calc(); self.pot_qmmm.calc()   
         self.pre_judge_tsh()
         self.check_ediff()
 
@@ -215,7 +217,8 @@ class TullySurfaceHopping_QMMM(TullySurfaceHopping):
                 get_accelerations_save_mm * dt * dt)
         if self.pot_mm.get_check_pbc: 
             self.mol_mm.set_positions(self.pot_mm.get_pbc_adjusted(self.mol_mm.get_positions()))  
-        self.pot.calc(self.count); self.pot_mm.calc(); self.pot_qmmm.calc()   
+        #self.pot.calc(self.count); self.pot_mm.calc(); self.pot_qmmm.calc()   
+        self.pot.calc(); self.pot_mm.calc(); self.pot_qmmm.calc()   
         self.mol.set_velocities(self.mol.get_velocities() + \
                 0.5 * (self.mol.get_accelerations() + \
                 get_accelerations_save) * dt)
@@ -241,7 +244,7 @@ class TullySurfaceHopping_QMMM_Rigid(TullySurfaceHopping):
         else: self.woutp.start(self)
 
     def prepare(self):
-        self.pot.calc(self.count); self.pot_mm.calc(); self.pot_qmmm.calc()   
+        self.pot.calc(); self.pot_mm.calc(); self.pot_qmmm.calc()   
         self.pre_judge_tsh()
         self.check_ediff()
 
@@ -251,7 +254,7 @@ class TullySurfaceHopping_QMMM_Rigid(TullySurfaceHopping):
         self.mol.set_positions(self.mol.get_positions() + \
                 self.mol.get_velocities() *  dt + 0.5 * \
                 get_accelerations_save * dt * dt)
-        self.pot.calc(self.count); self.pot_qmmm.calc()   
+        self.pot.calc(); self.pot_qmmm.calc()   
         self.mol.set_velocities(self.mol.get_velocities() + \
                 0.5 * (self.mol.get_accelerations() + \
                 get_accelerations_save) * dt)
