@@ -83,8 +83,8 @@ class VelocityVerlet_QMMM(MolecularDynamics):
     """ 
     
     def __init__(self, mol_qm, mol_mm, pot_qm, pot_mm, pot_qmmm, dt, nstep, \
-            restart=False, check_mdstop_dispersion = False, tlim = float('inf')):
-        MolecularDynamics.__init__(self, mol_qm, pot_qm, dt, nstep, restart, check_mdstop_dispersion, tlim)
+            restart=False, check_mdstop_dispersion = False, limit_dispersion = 10.0,tlim = float('inf')):
+        MolecularDynamics.__init__(self, mol_qm, pot_qm, dt, nstep, restart, check_mdstop_dispersion, limit_dispersion, tlim)
         self.mol_mm = mol_mm
         self.pot_mm = pot_mm
         self.pot_qmmm = pot_qmmm 

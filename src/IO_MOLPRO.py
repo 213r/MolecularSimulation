@@ -141,7 +141,7 @@ class InputMOLPRO:
         input_txt += self.option + '\n'
         #input_txt += self.symmetry + '\n'
         input_txt += 'geomtyp=' + self.geomtype + '\n'
-        input_txt += 'geometry={\n' 
+        input_txt += 'geometry={nosym;\n' 
         #input_txt += self.symmetry + ';\n'
         input_txt += str(len(self.mol)) + '\n' 
         input_txt += self.title + '\n' 

@@ -2,7 +2,7 @@ import numpy as np
 import math
 from Molecule import Molecule, bind_molecule
 from datetime import datetime
-from Restart import restart_mc,restart_mc_ex2, restart_md, restart_md_qmmm
+from Restart import restart_mc, restart_md, restart_md_qmmm
 from Constants import ang2bohr,bohr2ang, fs2tau, tau2fs
 import sys,os
 BIG_NUM = 1e8
@@ -34,16 +34,6 @@ class WriteOutput:
     def set_freq_trajectory(self, freq):
         self.freq_trj = freq - 1
         if self.not_restart: self.count_trj = self.freq_trj
-   
-    def set_fname_xyz(self, file_xyz): self.file_xyz = file_xyz
-    
-    def set_fname_ene(self, file_ene): self.file_ene = file_ene
-    
-    def set_fname_log(self, file_log): self.file_log = file_log
-    
-    def set_fname_trj(self, file_trj): self.file_trj = file_trj
-    
-    def set_fname_restart(self, file_restart): self.file_restart = file_restart
     
     def start(self):
         if os.path.isfile(self.file_xyz): os.remove(self.file_xyz)  
@@ -60,8 +50,7 @@ class WriteOutput:
         with open(self.file_trj,'a') as f: 
             f.write("Restart Here!!\n")
             f.write("\n"+"-"*40+"\n")
-        self.not_restart = True 
-        #self.not_restart = False
+        self.not_restart = False
 
     def logging(self, self_simu):
         pass 
@@ -89,7 +78,7 @@ class WriteOutput:
                 f.write("\n"+"-"*40+"\n")
         else: self.count_trj += 1 
 
-    def write_energy(self, self_simu):
+    def write_ene(self, self_simu):
         pass 
 
     def finalize(self, self_simu):
@@ -115,11 +104,11 @@ class WriteOutput:
 class WriteOutputMC(WriteOutput):
 
     def __init__(self): 
+
+        WriteOutput.__init__(self) 
         self.file_xyz, self.file_ene = "mc.xyz", "mc_energy.dat" 
         self.file_log, self.file_trj = "mc.log", "mc.trj"
         self.file_restart = "mc_restart.dat"
-        
-        WriteOutput.__init__(self) 
     
     def start(self):
         WriteOutput.start(self) 
@@ -127,11 +116,29 @@ class WriteOutputMC(WriteOutput):
         self.write_ene_message("#  Step Potential[H] Acceptance ratio\n")
 
     def restart(self, self_mc):
-        restart_mc(self_mc, self.file_restart) 
+        WriteOutput.restart(self) 
+        self.write_log_message("MC starts at {0:%Y-%m-%d %H:%M:%S}\n".format(self.time_start))
+        positions = restart_mc(self.file_restart) 
+        self_mc.mol.set_positions(positions)
 
     def logging(self, self_mc):
         self.write_xyz(self_mc)
         self.write_energy(self_mc)
+
+    def write_energy(self,self_mc):
+        if self.count_energy == self.freq_energy:
+            self.count_energy = 0
+            pot = self_mc.mol.get_potential_energy()
+            if self_mc.count == 0: ratio = 0 
+            else: 
+                ratio = float(self_mc.count_accept) / self_mc.count_tot 
+                if hasattr(self_mc, "delta_mol"):
+                    ratio_mol = float(self_mc.count_accept_mol) / self_mc.count_tot_mol 
+                    self.write_ene_message("{0:7d}   {1: 8.6f}   {2: 8.6f}   {3: 8.6f}\n".\
+                                format(self_mc.count, pot, ratio, ratio_mol))
+                else: 
+                    self.write_ene_message("{0:7d}   {1: 8.6f}   {2: 8.6f}\n".format(self_mc.count, pot, ratio))
+        else: self.count_energy += 1 
 
     def finalize(self, self_mc):
         with open(self.file_restart,'w') as f: 
@@ -147,63 +154,6 @@ class WriteOutputMC(WriteOutput):
         with open(self.file_log,'a') as f: 
             f.write("MC ends at {0:%Y-%m-%d %H:%M:%S}\n".format(time_end))
             f.write("Total MC run takes {0}\n".format(str(time_end - time_start).split('.')[0]))
-
-class WriteOutputMC_Ex2(WriteOutputMC):
-
-    def __init__(self): 
-        WriteOutputMC.__init__(self) 
- 
-    def write_energy(self,self_mc):
-        #print self.count_energy, self.freq_energy
-        if self.count_energy == self.freq_energy:
-            self.count_energy = 0
-            pot_mm = self_mc.mol.get_potential_energy()
-            pot_qm = self_mc.mol_qm.get_potential_energy()
-            pot_tot = pot_qm + pot_mm 
-            if self_mc.count_qm == 0: ratio_qm = 0.0
-            else: ratio_qm = float(self_mc.count_accept_qm) / self_mc.count_qm 
-            if self_mc.count_mm == 0: ratio_mm = 0.0
-            else: ratio_mm = float(self_mc.count_accept_mm) / self_mc.count_mm 
-            self.write_ene_message("{0:7d}      {1: 8.6f}      {2: 8.6f}      {3: 8.6f}      {4: 8.6f}      {5: 8.6f}\n".\
-                format(self_mc.count, pot_qm, pot_mm, pot_tot, ratio_qm, ratio_mm))
-            #self.write_ene_message("{0:7d}   {1: 8.6f}   {2: 8.6f}   {3: 8.6f}   {4: 8.6f}\n".\
-            #    format(self_mc.count, self_mc.count_qm, self_mc.count_accept_qm, self_mc.count_mm, self_mc.count_accept_mm))
-        else: self.count_energy += 1 
-    
-    
-    def restart(self, self_mc):
-        self.not_restart = True 
-        restart_mc_ex2(self_mc, self.file_restart) 
-
-    def start(self):
-        WriteOutput.start(self) 
-        self.write_log_message("MC starts at {0:%Y-%m-%d %H:%M:%S}\n".format(self.time_start))
-        self.write_ene_message("#  Step  Potential(QM)[H] Potential(MM) Potential(Tot) AceptRatio(QM) AceptRatio(MM)\n")
-    
-    def write_xyz(self,self_mc):
-        if self.count_xyz == self.freq_xyz:
-            self.count_xyz = 0
-            mol_tot = bind_molecule(self_mc.mol_qm,self_mc.mol) 
-            mess = "No.{}".format(self_mc.count) 
-            with open(self.file_xyz,'a') as f: 
-                f.write(mol_tot.get_positions_formated(unit="ang",label=False,message=mess))   
-        else: self.count_xyz += 1 
-
-    def finalize(self, self_mc):
-        with open(self.file_restart,'w') as f: 
-            f.write('Step = {0} \n'.format(str(self_mc.count)))
-            f.write("\nQM\n")
-            f.write(self_mc.mol_qm.get_positions_formated(unit='bohr'))  
-            f.write("\nMM\n")
-            f.write(self_mc.mol.get_positions_formated(unit='bohr'))  
-            f.write("\nalpha beta gamma\n")
-            f.write("{0: 10.8f} {1: 10.8f}  {2: 10.8f}\n".format(self_mc.alpha_save, self_mc.beta_save, self_mc.gamma_save))
-
-        time_start = self.time_start ; time_end = datetime.now()
-        with open(self.file_log,'a') as f: 
-            f.write("MC ends at {0:%Y-%m-%d %H:%M:%S}\n".format(time_end))
-            f.write("Total MC run takes {0}\n".format(str(time_end - time_start).split('.')[0]))
-
 
 class WriteOutputMD(WriteOutput):
 
@@ -417,9 +367,8 @@ class WriteOutputMD_TSH(WriteOutputMD):
 
     def write_prob_message(self,message):
         # log the hopping probability 
-        pass 
-        #with open(self.file_prob,'a') as f: 
-        #    f.write(message)
+        with open(self.file_prob,'a') as f: 
+            f.write(message)
 
     def finalize(self,self_tsh):
         with open(self.file_restart,'w') as f: 

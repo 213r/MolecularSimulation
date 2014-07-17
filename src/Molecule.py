@@ -170,6 +170,10 @@ class Molecule:
     def get_kinetic_energy(self):
         return np.sum(self.masses[:, np.newaxis] * \
         self.velocities * self.velocities) * 0.5
+    
+    def get_kinetic_energy_per_atoms(self):
+        return np.sum(self.masses[:, np.newaxis] * \
+        self.velocities * self.velocities, axis=1) * 0.5
 
     def get_bond_length(self,i,j, unit="bohr"):
         a = self.positions[i] - self.positions[j]
@@ -213,13 +217,13 @@ class Molecule:
         return acos(x)
 
     def get_positions_formated(self, unit='bohr', label = True, message = None):
-        str = "    {}\n".format(self.natoms)
+        st = "    {}\n".format(self.natoms)
         if label: 
-            if message == None: str += "   #Coordinates [{}] \n".format(unit) 
-            else: str += "   #Coordinates [{}] {} \n".format(unit,message) 
+            if message == None: st += "   #Coordinates [{}] \n".format(unit) 
+            else: st += "   #Coordinates [{}] {} \n".format(unit,message) 
         else: 
-            if message == None: str += "\n"  
-            else: str += "    {} \n".format(message) 
+            if message == None: st += "\n"  
+            else: st += "    {} \n".format(message) 
             
         for i in xrange(self.natoms):
             sym = self.atomnames[i]
@@ -228,8 +232,8 @@ class Molecule:
             else: 
                 print 'Error: the unit of positions is wrong'
                 sys.exit() 
-            str += "{:s}   {:15.8f}   {:15.8f}   {:15.8f}\n".format(sym,*coord) 
-        return str 
+            st += "{:s}   {:15.8f}   {:15.8f}   {:15.8f}\n".format(sym,*coord) 
+        return st
 
     def get_velocities_formated(self, unit='bohr/tau', label = True, message = None):
         str = "    {}\n".format(self.natoms)

@@ -23,6 +23,29 @@ def restart_mc(fname):
             line = f.readline() 
         return positions 
 
+def restart_mc_ex2(self_mc, fname):
+    with open(fname,'r') as f: 
+        positions_qm = [] 
+        positions_mm = [] 
+        delta_rot = [] 
+        line = f.readline()
+        while line:
+            if ("QM" in line):
+                line = f.readline() 
+                natom = int(line.split()[0])  
+                line = f.readline() 
+                for _ in xrange(natom): positions_qm.append(map(float, f.readline().split()[1:]))
+            if ("MM" in line):
+                line = f.readline() 
+                natom = int(line.split()[0])  
+                line = f.readline() 
+                for _ in xrange(natom): positions_mm.append(map(float, f.readline().split()[1:]))
+            if ("alpha" in line):
+                delta_rot = map(float, f.readline().split())
+            line = f.readline() 
+        self_mc.mol.set_positions(positions_mm)
+        self_mc.mol_qm.set_positions(positions_qm)
+        self_mc.set_delta_qm(delta_rot)
 
 def restart_md(fname):
     with open(fname,'r') as f: 

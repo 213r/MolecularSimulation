@@ -19,11 +19,10 @@ class TullySurfaceHopping(MolecularDynamics):
     
     def __init__(self, mol, pot, dt, nstep, tsh_times, restart = False,\
             tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, check_mdstop_dispersion = False,\
-            tlim = float('inf')):
-    
+            limit_dispersion = 10.0, tlim = float('inf')):
       
         MolecularDynamics.__init__(self, mol, pot, dt, nstep, restart,\
-                check_mdstop_dispersion, tlim)
+                check_mdstop_dispersion, limit_dispersion, tlim)
 
         self.now_state = self.pot.get_now_state()
         self.nrange = self.pot.get_nrange()
@@ -182,7 +181,8 @@ class TullySurfaceHopping(MolecularDynamics):
 class TullySurfaceHopping_QMMM(TullySurfaceHopping):
     
     def __init__(self, mol_qm, mol_mm, pot_qm, pot_mm, pot_qmmm, dt, nstep, tsh_times, restart = False, \
-            tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, check_mdstop_dispersion = False, tlim = float('inf')):
+            tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, check_mdstop_dispersion = False, \
+            limit_dispersion = 10.0, tlim = float('inf')):
 
         self.mol_mm = mol_mm
         self.pot_mm = pot_mm
@@ -192,7 +192,7 @@ class TullySurfaceHopping_QMMM(TullySurfaceHopping):
             self.mol_mm.set_positions(self.pot_mm.get_pbc_adjusted(self.mol_mm.get_positions()))  
         
         TullySurfaceHopping.__init__(self,mol_qm ,pot_qm, dt, nstep, tsh_times, restart,\
-            tsh_ediff_thresh, tsh_ediff_factor, check_mdstop_dispersion, tlim)
+            tsh_ediff_thresh, tsh_ediff_factor, check_mdstop_dispersion, limit_dispersion, tlim)
 
     def setup_output(self):
         self.woutp = WriteOutputMD_TSH_QMMM()
@@ -230,13 +230,14 @@ class TullySurfaceHopping_QMMM(TullySurfaceHopping):
 class TullySurfaceHopping_QMMM_Rigid(TullySurfaceHopping):
     
     def __init__(self, mol_qm, mol_mm, pot_qm, pot_mm, pot_qmmm, dt, nstep, tsh_times, restart = False, \
-            tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, check_mdstop_dispersion = False, tlim = float('inf')):
+            tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, check_mdstop_dispersion = False, limit_dispersion = 10.0, \
+            tlim = float('inf')):
         self.mol_mm = mol_mm
         self.pot_mm = pot_mm
         self.pot_qmmm = pot_qmmm 
         
         TullySurfaceHopping.__init__(self,mol_qm ,pot_qm, dt, nstep, tsh_times, restart,\
-            tsh_ediff_thresh, tsh_ediff_factor, check_mdstop_dispersion, tlim)
+            tsh_ediff_thresh, tsh_ediff_factor, check_mdstop_dispersion, limit_dispersion, tlim)
 
     def setup_output(self):
         self.woutp = WriteOutputMD_TSH_QMMM()

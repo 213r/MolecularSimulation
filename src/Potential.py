@@ -4,7 +4,7 @@ from copy import deepcopy
 from math import sqrt 
 from IO_MOLPRO import InputMOLPRO, OutputMOLPRO
 #from Potential_MM_Cython import potential_mm_cython, potential_qmmm_cython  
-from Potential_MM_f2py import potential_mm_f2py_ar, potential_mm_f2py_mc_hcooh_ar, potential_qmmm_f2py_hcooh_ar
+from Potential_MM_f2py import potential_mm_f2py_ar, potential_qmmm_f2py_hcooh_ar, potential_mm_f2py_ar_mc, potential_qmmm_f2py_hcooh_ar_mc  
 
 """
 Potential Module 
@@ -44,19 +44,19 @@ class Potential_MM:
         self.mol.set_potential_energy(self.energy)
         self.mol.set_forces(self.forces) 
 
-    def get_interaction_energy(self, ind):
-        #This method is only for MonteCarlo 
-        positions = self.mol.get_positions() 
-        atomnumbers = self.mol.get_atomnumbers()
-        #print atomnumbers 
-        #sys.exit() 
-        return potential_mm_f2py_mc_HCOOHAr(ind, positions.T, self.rlimit, self.check_pbc, self.box, self.invbox) 
-
     def get_potential_energy(self):
         return self.energy 
     
     def get_forces(self):
         return self.forces
+
+    def get_interaction_energy_mc(self, ind):
+        #This method is only for MonteCarlo 
+        positions = self.mol.get_positions() 
+        #print atomnumbers 
+        #sys.exit() 
+        return potential_mm_f2py_ar_mc(ind, positions.T, self.rlimit, self.check_pbc, self.box, self.invbox) 
+
 
 class Potential_QMMM(Potential_MM):
 
@@ -92,19 +92,34 @@ class Potential_QMMM(Potential_MM):
     def get_interaction_energy(self):
         return self.energy 
 
+    def get_interaction_energy_mc(self, ind):
+        #This method is only for MonteCarlo 
+        positions_qm = self.mol_qm.get_positions() 
+        positions_mm = self.mol_mm.get_positions() 
+        #print atomnumbers 
+        #sys.exit() 
+        return potential_qmmm_f2py_hcooh_ar_mc(ind, positions_qm.T, positions_mm.T, self.rlimit, self.check_pbc, self.box, self.invbox) 
+
 
 class Potential_QM:
     
-    def __init__(self, mol, inp, nrange = 1, freq_molden = -1):
+    def __init__(self, mol, inp, nrange = 1):
         self.mol = mol
         self.inp = inp
         self.nrange = nrange
-        self.freq_molden = freq_molden 
-        self.count_molden = 0
+        self.freq_molden = -1 
+        self.freq_save_input = -1 
+        self.count = 0
         if str(self.inp) == "InputMOLPRO":
             root, ext = os.path.splitext(self.inp.get_inputname())
             self.outp = OutputMOLPRO(root + ".out", self.mol)
 
+    def set_freq_molden(self,freq):
+        self.freq_molden = freq
+
+    def set_freq_save_input(self,freq):
+        self.freq_save_input = freq
+    
     def override_output(self, wfile,mol=None):
         if mol is None: mol = self.mol 
         self.outp = OutputMOLPRO(wfile, self.mol)
@@ -112,15 +127,17 @@ class Potential_QM:
     def calc(self):
         self.inp.set_molecule(self.mol) 
         self.inp.make_input()
-        if self.freq_molden > -1 and self.count_molden % self.freq_molden == 0:
-            self.inp.add_method("put, molden, tmp_{}.molden".format(self.count_molden))
+        if self.freq_molden > -1 and self.count % self.freq_molden == 0:
+            self.inp.add_method("put, molden, tmp_{}.molden".format(self.count))
         self.inp.write()
         os.system(self.inp.get_command())            
+        if self.freq_save_input > -1 and self.count % self.freq_save_input == 0:
+            os.system("cp tmp.out tmp_{}.out".format(self.count)) 
         self.mol.set_potential_energy_multi(self.get_potential_energy_multi())
         self.mol.set_potential_energy(self.get_potential_energy())
         self.mol.set_forces(-self.get_gradient())
         self.mol.set_addinfo(self.get_addinfo())
-        self.count_molden += 1
+        self.count += 1
 
     def get_check_pbc(self):
         return False 
@@ -154,6 +171,9 @@ class Potential_QM_RHF(Potential_QM):
 
     def get_potential_energy(self):
         return self.ene 
+    
+    def get_potential_energy_multi(self):
+        return np.array([self.ene]) 
 
     def get_gradient(self):
         return self.outp.get_gradient_multi(0) 
@@ -217,9 +237,9 @@ class Potential_QM_CASPT2(Potential_QM):
 
 class Potential_TSH(Potential_QM):
 
-    def __init__(self, mol, inp, now_state, nrange, freq_molden):
+    def __init__(self, mol, inp, now_state, nrange):
         #super(Potential_TSH, self).__init__(mol, inp)
-        Potential_QM.__init__(self, mol, inp, nrange, freq_molden)
+        Potential_QM.__init__(self, mol, inp, nrange)
         self.now_state = now_state
         self.d_multi_old = None
     
@@ -228,14 +248,16 @@ class Potential_TSH(Potential_QM):
     def calc(self):
         self.inp.set_molecule(self.mol) 
         self.inp.make_input()
-        if self.freq_molden > -1 and self.count_molden % self.freq_molden == 0:
-            self.inp.add_method("put, molden, tmp_{}.molden".format(self.count_molden))
+        if self.freq_molden > -1 and self.count % self.freq_molden == 0:
+            self.inp.add_method("put, molden, tmp_{}.molden".format(self.count))
         self.inp.write()
         os.system(self.inp.get_command())
+        if self.freq_save_input > -1 and self.count % self.freq_save_input == 0:
+            os.system("cp tmp.out tmp_{}.out".format(self.count)) 
         self.check_nacme_sign() 
         self.mol.set_potential_energy_multi(self.get_potential_energy_multi())
         self.mol.set_forces(-self.get_gradient())
-        self.count_molden += 1
+        self.count += 1
 
     def set_now_state(self,now_state):
         pass 
@@ -273,9 +295,9 @@ class Potential_TSH(Potential_QM):
 
 class Potential_TSH_CASSCF(Potential_TSH):
 
-    def __init__(self, mol, inp, now_state, nrange, freq_molden=10):
+    def __init__(self, mol, inp, now_state, nrange):
         #super(Potential_TSH_CASSCF, self).__init__(mol, inp, now_state, nrange)
-        Potential_TSH.__init__(self, mol, inp, now_state, nrange,freq_molden)
+        Potential_TSH.__init__(self, mol, inp, now_state, nrange)
 
     def set_now_state(self,now_state):
         self.now_state = now_state
@@ -293,7 +315,7 @@ class Potential_TSH_CASSCF(Potential_TSH):
 
 class Potential_TSH_CASPT2(Potential_TSH):
 
-    def __init__(self, mol, inp, now_state, nrange, freq_molden=10):
+    def __init__(self, mol, inp, now_state, nrange):
         Potential_TSH.__init__(self, mol, inp, now_state, nrange)
         #super(Potential_TSH_CASPT2, self).__init__(mol, inp, now_state, nrange)
         self.setup()
