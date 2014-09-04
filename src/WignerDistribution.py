@@ -4,6 +4,7 @@ from numpy import linalg
 from Constants import au2cm,me2amu, amu2me
 import sys, math
 
+
 def wigner_distribution(fname_output,nsample, make_file=True): 
     
     # read the hessian from output file 
@@ -60,6 +61,56 @@ def wigner_distribution(fname_output,nsample, make_file=True):
     print np.average(ene_kin)
     print np.average(ene_pot)
     print np.average(ene_tot)
+
+def set_zero_energy_velocities(fname_output,nsample, make_file=True): 
+    # This method is modified such that the kinetic energy is 
+    # set to zero point energy and the structure is the eq coordinate
+
+    # read the hessian from output file 
+    outp = OutputMOLPRO(fname_output)
+    mol = outp.get_mol_info()
+    hess_mw, q_eq = outp.get_hessian_and_eqcoord()
+    q_eq = np.ravel(q_eq)
+
+    # diagonalization
+    eig, trs_mw = linalg.eigh(hess_mw)  
+    eig = eig/amu2me
+    hess_mw = hess_mw/amu2me
+    eig = np.sqrt(eig[6:])
+    print np.sum(eig*au2cm) # print the frequency in cm-1
+
+    # sampling mass-weighted normal-mode coordinates and momenta 
+    #p_rand = np.sqrt(1.0*eig)[:,np.newaxis]*np.random.randn(len(eig),nsample)
+    p_rand = np.sqrt(1.0*eig)[:,np.newaxis]*np.ones((len(eig),nsample))
+   
+    # translate to mass-weighted Cartesian coordinates and momenta 
+    trs_mw =  trs_mw[:,6:]
+    p_mw = np.dot(trs_mw,p_rand) 
+
+    # translate to mass-weighted Cartesian coordinates and momenta 
+    #mass_3row = np.ravel(np.ones((len(mol),3))*mol.get_atomic_masses()[:,np.newaxis])
+    mass_3row = np.ravel(np.ones((len(mol),3))*mol.get_masses()[:,np.newaxis])
+    p = p_mw*np.sqrt(mass_3row)[:,np.newaxis] 
+    v = p/mass_3row[:,np.newaxis] 
+
+    #if as_instance:
+    #    return q.T.reshape(nsample, len(mol),3),\
+    #           v.T.reshape(nsample, len(mol),3)
+
+    # print coordinates and velocities
+    if make_file: 
+        for i in xrange(nsample):
+            fv_name = "velocity" + str(i+1)  
+            fv = open(fv_name,"w")
+            for j in xrange(len(mol)):
+                fv.write("{0: 10.8f} {1: 10.8f} {2: 10.8f}\n".format(*v.T[i].reshape(len(mol),3)[j]))
+            fv.close()
+
+    # obtain the kintic and potential energy  
+    ene_kin = 0.5*np.sum(p_mw*p_mw,axis=0)
+    print ene_kin 
+    print 0.5*np.sum(eig)
+    print np.average(ene_kin)
 
 def get_harmonic_frequency(wfile, mol):
     f = open(wfile,'r')

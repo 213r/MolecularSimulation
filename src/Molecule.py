@@ -217,6 +217,7 @@ class Molecule:
         return acos(x)
 
     def get_positions_formated(self, unit='bohr', label = True, message = None):
+        form = "{:s}" + "  {:15.8f}" * self.ndims + "\n"   
         st = "    {}\n".format(self.natoms)
         if label: 
             if message == None: st += "   #Coordinates [{}] \n".format(unit) 
@@ -232,17 +233,19 @@ class Molecule:
             else: 
                 print 'Error: the unit of positions is wrong'
                 sys.exit() 
-            st += "{:s}   {:15.8f}   {:15.8f}   {:15.8f}\n".format(sym,*coord) 
+            st += form.format(sym,*coord) 
+            #st += "{:s}   {:15.8f}   {:15.8f}   {:15.8f}\n".format(sym,*coord) 
         return st
 
     def get_velocities_formated(self, unit='bohr/tau', label = True, message = None):
-        str = "    {}\n".format(self.natoms)
+        form = "{:s}" + "  {:15.8f}" * self.ndims + "\n"   
+        st = "    {}\n".format(self.natoms)
         if label: 
-            if message == None: str += "   #Velocities [{}] \n".format(unit) 
-            else: str += "   #Velocities [{}] {}\n".format(unit,message) 
+            if message == None: st += "   #Velocities [{}] \n".format(unit) 
+            else: st += "   #Velocities [{}] {}\n".format(unit,message) 
         else: 
-            if message == None: str += "\n"  
-            else: str += "    {} \n".format(message) 
+            if message == None: st += "\n"  
+            else: st += "    {} \n".format(message) 
  
         for i in xrange(self.natoms):
             sym = self.atomnames[i]
@@ -251,8 +254,8 @@ class Molecule:
             else: 
                 print 'Error: the unit of positions is wrong'
                 sys.exit() 
-            str += "{:s}   {:15.8f}   {:15.8f}   {:15.8f}\n".format(sym,*vel) 
-        return str 
+            st += form.format(sym,*vel) 
+        return st 
 
     def sort_by_positions(self, origin = np.zeros(3)):
         origin = np.array(origin)

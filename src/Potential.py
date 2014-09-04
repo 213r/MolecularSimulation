@@ -167,14 +167,11 @@ class Potential_QM_RHF(Potential_QM):
 
     def get_potential_energy_multi(self):
         self.ene = self.outp.get_potential_energy_rhf()
-        return np.array(self.ene) 
+        return np.array([self.ene]) 
 
     def get_potential_energy(self):
         return self.ene 
     
-    def get_potential_energy_multi(self):
-        return np.array([self.ene]) 
-
     def get_gradient(self):
         return self.outp.get_gradient_multi(0) 
 

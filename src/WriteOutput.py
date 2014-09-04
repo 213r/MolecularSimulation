@@ -21,19 +21,19 @@ class WriteOutput:
 
     def set_freq_xyz(self, freq):
         self.freq_xyz = freq - 1
-        if self.not_restart: self.count_xyz = self.freq_xyz
+        self.count_xyz = self.freq_xyz
  
     def set_freq_vel_xyz(self, freq):
         self.freq_vel_xyz = freq - 1
-        if self.not_restart: self.count_vel_xyz = self.freq_vel_xyz
+        self.count_vel_xyz = self.freq_vel_xyz
 
     def set_freq_energy(self, freq):
         self.freq_energy = freq - 1
-        if self.not_restart: self.count_energy = self.freq_energy
+        self.count_energy = self.freq_energy
 
     def set_freq_trajectory(self, freq):
         self.freq_trj = freq - 1
-        if self.not_restart: self.count_trj = self.freq_trj
+        self.count_trj = self.freq_trj
    
     def set_fname_xyz(self, file_xyz): self.file_xyz = file_xyz
     
@@ -50,18 +50,17 @@ class WriteOutput:
         if os.path.isfile(self.file_ene): os.remove(self.file_ene)  
         if os.path.isfile(self.file_log): os.remove(self.file_log)  
         if os.path.isfile(self.file_trj): os.remove(self.file_trj)  
-        self.not_restart = True 
 
-    def restart(self):
-        with open(self.file_ene,'a') as f: 
-            f.write("#Restart Here!!\n")
-        with open(self.file_log,'a') as f: 
-            f.write("Restart Here!!\n")
-        with open(self.file_trj,'a') as f: 
-            f.write("Restart Here!!\n")
-            f.write("\n"+"-"*40+"\n")
-        self.not_restart = True 
-        #self.not_restart = False
+#    def restart(self):
+#        with open(self.file_ene,'a') as f: 
+#            f.write("#Restart Here!!\n")
+#        with open(self.file_log,'a') as f: 
+#            f.write("Restart Here!!\n")
+#        with open(self.file_trj,'a') as f: 
+#            f.write("Restart Here!!\n")
+#            f.write("\n"+"-"*40+"\n")
+#        self.not_restart = True 
+#        #self.not_restart = False
 
     def logging(self, self_simu):
         pass 
@@ -172,7 +171,6 @@ class WriteOutputMC_Ex2(WriteOutputMC):
     
     
     def restart(self, self_mc):
-        self.not_restart = True 
         restart_mc_ex2(self_mc, self.file_restart) 
 
     def start(self):
@@ -222,11 +220,7 @@ class WriteOutputMD(WriteOutput):
                 .format(self_md.nrange))
 
     def restart(self, self_md):
-        WriteOutput.restart(self) 
-        self.write_log_message("MD starts at {0:%Y-%m-%d %H:%M:%S}\n".format(self.time_start))
-        at_start, positions, velocities = restart_md(self.file_restart)  
-        self_md.set_elaptime(at_start) 
-        self_md.mol.set_positions(positions); self_md.mol.set_velocities(velocities) 
+        restart_md(self_md, self.file_restart)  
 
     def logging(self, self_md):
         self.write_xyz(self_md)
@@ -265,27 +259,31 @@ class WriteOutputMD_QMMM(WriteOutput):
         self.file_log, self.file_trj = "md_qmmm.log", "md_qmmm.trj"
         self.file_restart = "md_qmmm_restart.dat"
         self.file_vel_xyz = "md_qmmm_vel.xyz"
+        self.file_mm_trj = "md_qmmm_mm.trj"
+        
+        self.freq_mm_trj = BIG_NUM 
+        self.count_mm_trj = 0 
 
     def start(self, self_md):
         WriteOutput.start(self) 
+        if os.path.isfile(self.file_mm_trj): os.remove(self.file_mm_trj)  
         self.write_log_message("MD starts at {0:%Y-%m-%d %H:%M:%S}\n".format(self.time_start))
         #self.write_ene_message("#Time[fs] Kin(QM)[H] Pot(QM) Kin(MM) Pot(MM) Pot(QMMM) Total\n")
         self.write_ene_message("#Time[fs] Kin(QM)[H] Pot(QM)(1~{0}) Kin(MM) Pot(MM) Pot(QMMM) Total\n"\
                 .format(self_md.nrange))
 
     def restart(self, self_md):
-        WriteOutput.restart(self) 
-        self.write_log_message("MD starts at {0:%Y-%m-%d %H:%M:%S}\n".format(self.time_start))
-        at_start, positions_qm, velocities_qm, positions_mm, velocities_mm = \
-                restart_md_qmmm(self.file_restart)  
-        self_md.set_elaptime(at_start) 
-        self_md.mol.set_positions(positions); self_md.mol.set_velocities(velocities) 
-        self_md.mol_mm.set_positions(positions_mm); self_md.mol_mm.set_velocities(velocities_mm) 
+        restart_md_qmmm(self_md, self.file_restart)  
 
+    def set_freq_mm_trajectory(self, freq_mm):
+        self.freq_mm_trj = freq_mm - 1
+        self.count_mm_trj = self.freq_mm_trj
+    
     def logging(self, self_md):
         self.write_xyz(self_md)
         self.write_vel_xyz(self_md)
         self.write_trj(self_md)
+        self.write_mm_trj(self_md)
         self.write_energy(self_md)
         if self.q_add: self.write_additional(self_md)
 
@@ -306,7 +304,18 @@ class WriteOutputMD_QMMM(WriteOutput):
             with open(self.file_vel_xyz,'a') as f: 
                 f.write(mol_tot.get_velocities_formated(unit="bohr/tau",label=False,message=mess))   
         else: self.count_vel_xyz += 1 
-      
+ 
+    def write_mm_trj(self, self_md):
+        if self.count_mm_trj == self.freq_mm_trj:
+            self.count_mm_trj = 0
+            with open(self.file_mm_trj,'a') as f: 
+                f.write('No.{0}: Time = {1} [fs]\n'.format(str(self_md.count),str(self_md.elaptime*tau2fs)))
+                f.write(self_md.mol_mm.get_positions_formated(unit='bohr'))  
+                f.write(self_md.mol_mm.get_velocities_formated(unit='bohr/tau'))  
+                f.write("\n"+"-"*40+"\n")
+        else: self.count_mm_trj += 1 
+
+     
     def write_energy(self, self_md):
         if self.count_energy == self.freq_energy:
             self.count_energy = 0

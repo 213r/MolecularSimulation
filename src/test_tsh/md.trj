@@ -1,0 +1,909 @@
+No.0: Time = 0.0 [fs]
+    1
+   #Coordinates [bohr] 
+X       0.00000000
+    1
+   #Velocities [bohr/tau] 
+X       0.10000000
+
+----------------------------------------
+No.1: Time = 0.1 [fs]
+    1
+   #Coordinates [bohr] 
+X       0.41341447
+    1
+   #Velocities [bohr/tau] 
+X       0.09991454
+
+----------------------------------------
+No.2: Time = 0.2 [fs]
+    1
+   #Coordinates [bohr] 
+X       0.82612237
+    1
+   #Velocities [bohr/tau] 
+X       0.09965832
+
+----------------------------------------
+No.3: Time = 0.3 [fs]
+    1
+   #Coordinates [bohr] 
+X       1.23741833
+    1
+   #Velocities [bohr/tau] 
+X       0.09923177
+
+----------------------------------------
+No.4: Time = 0.4 [fs]
+    1
+   #Coordinates [bohr] 
+X       1.64659939
+    1
+   #Velocities [bohr/tau] 
+X       0.09863563
+
+----------------------------------------
+No.5: Time = 0.5 [fs]
+    1
+   #Coordinates [bohr] 
+X       2.05296623
+    1
+   #Velocities [bohr/tau] 
+X       0.09787090
+
+----------------------------------------
+No.6: Time = 0.6 [fs]
+    1
+   #Coordinates [bohr] 
+X       2.45582432
+    1
+   #Velocities [bohr/tau] 
+X       0.09693890
+
+----------------------------------------
+No.7: Time = 0.7 [fs]
+    1
+   #Coordinates [bohr] 
+X       2.85448511
+    1
+   #Velocities [bohr/tau] 
+X       0.09584122
+
+----------------------------------------
+No.8: Time = 0.8 [fs]
+    1
+   #Coordinates [bohr] 
+X       3.24826726
+    1
+   #Velocities [bohr/tau] 
+X       0.09457974
+
+----------------------------------------
+No.9: Time = 0.9 [fs]
+    1
+   #Coordinates [bohr] 
+X       3.63649775
+    1
+   #Velocities [bohr/tau] 
+X       0.09315661
+
+----------------------------------------
+No.10: Time = 1.0 [fs]
+    1
+   #Coordinates [bohr] 
+X       4.01851304
+    1
+   #Velocities [bohr/tau] 
+X       0.09157426
+
+----------------------------------------
+No.11: Time = 1.1 [fs]
+    1
+   #Coordinates [bohr] 
+X       4.39366024
+    1
+   #Velocities [bohr/tau] 
+X       0.08983540
+
+----------------------------------------
+No.12: Time = 1.2 [fs]
+    1
+   #Coordinates [bohr] 
+X       4.76129815
+    1
+   #Velocities [bohr/tau] 
+X       0.08794301
+
+----------------------------------------
+No.13: Time = 1.3 [fs]
+    1
+   #Coordinates [bohr] 
+X       5.12079846
+    1
+   #Velocities [bohr/tau] 
+X       0.08590031
+
+----------------------------------------
+No.14: Time = 1.4 [fs]
+    1
+   #Coordinates [bohr] 
+X       5.47154674
+    1
+   #Velocities [bohr/tau] 
+X       0.08371079
+
+----------------------------------------
+No.15: Time = 1.5 [fs]
+    1
+   #Coordinates [bohr] 
+X       5.81294351
+    1
+   #Velocities [bohr/tau] 
+X       0.08137820
+
+----------------------------------------
+No.16: Time = 1.6 [fs]
+    1
+   #Coordinates [bohr] 
+X       6.14440529
+    1
+   #Velocities [bohr/tau] 
+X       0.07890653
+
+----------------------------------------
+No.17: Time = 1.7 [fs]
+    1
+   #Coordinates [bohr] 
+X       6.46536557
+    1
+   #Velocities [bohr/tau] 
+X       0.07630000
+
+----------------------------------------
+No.18: Time = 1.8 [fs]
+    1
+   #Coordinates [bohr] 
+X       6.77527579
+    1
+   #Velocities [bohr/tau] 
+X       0.07356307
+
+----------------------------------------
+No.19: Time = 1.9 [fs]
+    1
+   #Coordinates [bohr] 
+X       7.07360629
+    1
+   #Velocities [bohr/tau] 
+X       0.07070040
+
+----------------------------------------
+No.20: Time = 2.0 [fs]
+    1
+   #Coordinates [bohr] 
+X       7.35984718
+    1
+   #Velocities [bohr/tau] 
+X       0.06771690
+
+----------------------------------------
+No.21: Time = 2.1 [fs]
+    1
+   #Coordinates [bohr] 
+X       7.63350924
+    1
+   #Velocities [bohr/tau] 
+X       0.06461767
+
+----------------------------------------
+No.22: Time = 2.2 [fs]
+    1
+   #Coordinates [bohr] 
+X       7.89412475
+    1
+   #Velocities [bohr/tau] 
+X       0.06140799
+
+----------------------------------------
+No.23: Time = 2.3 [fs]
+    1
+   #Coordinates [bohr] 
+X       8.14124829
+    1
+   #Velocities [bohr/tau] 
+X       0.05809336
+
+----------------------------------------
+No.24: Time = 2.4 [fs]
+    1
+   #Coordinates [bohr] 
+X       8.37445749
+    1
+   #Velocities [bohr/tau] 
+X       0.05467945
+
+----------------------------------------
+No.25: Time = 2.5 [fs]
+    1
+   #Coordinates [bohr] 
+X       8.59335379
+    1
+   #Velocities [bohr/tau] 
+X       0.05117208
+
+----------------------------------------
+No.26: Time = 2.6 [fs]
+    1
+   #Coordinates [bohr] 
+X       8.79756305
+    1
+   #Velocities [bohr/tau] 
+X       0.04757725
+
+----------------------------------------
+No.27: Time = 2.7 [fs]
+    1
+   #Coordinates [bohr] 
+X       8.98673626
+    1
+   #Velocities [bohr/tau] 
+X       0.04390111
+
+----------------------------------------
+No.28: Time = 2.8 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.16055009
+    1
+   #Velocities [bohr/tau] 
+X       0.04014993
+
+----------------------------------------
+No.29: Time = 2.9 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.31870750
+    1
+   #Velocities [bohr/tau] 
+X       0.03633013
+
+----------------------------------------
+No.30: Time = 3.0 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.46093815
+    1
+   #Velocities [bohr/tau] 
+X       0.03244824
+
+----------------------------------------
+No.31: Time = 3.1 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.58699897
+    1
+   #Velocities [bohr/tau] 
+X       0.02851090
+
+----------------------------------------
+No.32: Time = 3.2 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.69667451
+    1
+   #Velocities [bohr/tau] 
+X       0.02452482
+
+----------------------------------------
+No.33: Time = 3.3 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.78977730
+    1
+   #Velocities [bohr/tau] 
+X       0.02049683
+
+----------------------------------------
+No.34: Time = 3.4 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.86614824
+    1
+   #Velocities [bohr/tau] 
+X       0.01643381
+
+----------------------------------------
+No.35: Time = 3.5 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.92565679
+    1
+   #Velocities [bohr/tau] 
+X       0.01234270
+
+----------------------------------------
+No.36: Time = 3.6 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.96820125
+    1
+   #Velocities [bohr/tau] 
+X       0.00823049
+
+----------------------------------------
+No.37: Time = 3.7 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.99370890
+    1
+   #Velocities [bohr/tau] 
+X       0.00410422
+
+----------------------------------------
+No.38: Time = 3.8 [fs]
+    1
+   #Coordinates [bohr] 
+X      10.00213615
+    1
+   #Velocities [bohr/tau] 
+X      -0.00002906
+
+----------------------------------------
+No.39: Time = 3.9 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.99346860
+    1
+   #Velocities [bohr/tau] 
+X      -0.00416230
+
+----------------------------------------
+No.40: Time = 4.0 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.96772105
+    1
+   #Velocities [bohr/tau] 
+X      -0.00828842
+
+----------------------------------------
+No.41: Time = 4.1 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.92493752
+    1
+   #Velocities [bohr/tau] 
+X      -0.01240038
+
+----------------------------------------
+No.42: Time = 4.2 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.86519112
+    1
+   #Velocities [bohr/tau] 
+X      -0.01649114
+
+----------------------------------------
+No.43: Time = 4.3 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.78858398
+    1
+   #Velocities [bohr/tau] 
+X      -0.02055372
+
+----------------------------------------
+No.44: Time = 4.4 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.69524701
+    1
+   #Velocities [bohr/tau] 
+X      -0.02458117
+
+----------------------------------------
+No.45: Time = 4.5 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.58533975
+    1
+   #Velocities [bohr/tau] 
+X      -0.02856661
+
+----------------------------------------
+No.46: Time = 4.6 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.45905004
+    1
+   #Velocities [bohr/tau] 
+X      -0.03250322
+
+----------------------------------------
+No.47: Time = 4.7 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.31659372
+    1
+   #Velocities [bohr/tau] 
+X      -0.03638428
+
+----------------------------------------
+No.48: Time = 4.8 [fs]
+    1
+   #Coordinates [bohr] 
+X       9.15821426
+    1
+   #Velocities [bohr/tau] 
+X      -0.04020316
+
+----------------------------------------
+No.49: Time = 4.9 [fs]
+    1
+   #Coordinates [bohr] 
+X       8.98418236
+    1
+   #Velocities [bohr/tau] 
+X      -0.04395332
+
+----------------------------------------
+No.50: Time = 5.0 [fs]
+    1
+   #Coordinates [bohr] 
+X       8.79479545
+    1
+   #Velocities [bohr/tau] 
+X      -0.04762837
+
+----------------------------------------
+No.51: Time = 5.1 [fs]
+    1
+   #Coordinates [bohr] 
+X       8.59037723
+    1
+   #Velocities [bohr/tau] 
+X      -0.05122201
+
+----------------------------------------
+No.52: Time = 5.2 [fs]
+    1
+   #Coordinates [bohr] 
+X       8.37127706
+    1
+   #Velocities [bohr/tau] 
+X      -0.05472811
+
+----------------------------------------
+No.53: Time = 5.3 [fs]
+    1
+   #Coordinates [bohr] 
+X       8.13786941
+    1
+   #Velocities [bohr/tau] 
+X      -0.05814067
+
+----------------------------------------
+No.54: Time = 5.4 [fs]
+    1
+   #Coordinates [bohr] 
+X       7.89055320
+    1
+   #Velocities [bohr/tau] 
+X      -0.06145386
+
+----------------------------------------
+No.55: Time = 5.5 [fs]
+    1
+   #Coordinates [bohr] 
+X       7.62975112
+    1
+   #Velocities [bohr/tau] 
+X      -0.06466202
+
+----------------------------------------
+No.56: Time = 5.6 [fs]
+    1
+   #Coordinates [bohr] 
+X       7.35590892
+    1
+   #Velocities [bohr/tau] 
+X      -0.06775966
+
+----------------------------------------
+No.57: Time = 5.7 [fs]
+    1
+   #Coordinates [bohr] 
+X       7.06949463
+    1
+   #Velocities [bohr/tau] 
+X      -0.07074150
+
+----------------------------------------
+No.58: Time = 5.8 [fs]
+    1
+   #Coordinates [bohr] 
+X       6.77099775
+    1
+   #Velocities [bohr/tau] 
+X      -0.07360243
+
+----------------------------------------
+No.59: Time = 5.9 [fs]
+    1
+   #Coordinates [bohr] 
+X       6.46092845
+    1
+   #Velocities [bohr/tau] 
+X      -0.07633756
+
+----------------------------------------
+No.60: Time = 6.0 [fs]
+    1
+   #Coordinates [bohr] 
+X       6.13981668
+    1
+   #Velocities [bohr/tau] 
+X      -0.07894223
+
+----------------------------------------
+No.61: Time = 6.1 [fs]
+    1
+   #Coordinates [bohr] 
+X       5.80821126
+    1
+   #Velocities [bohr/tau] 
+X      -0.08141197
+
+----------------------------------------
+No.62: Time = 6.2 [fs]
+    1
+   #Coordinates [bohr] 
+X       5.46667893
+    1
+   #Velocities [bohr/tau] 
+X      -0.08374257
+
+----------------------------------------
+No.63: Time = 6.3 [fs]
+    1
+   #Coordinates [bohr] 
+X       5.11580342
+    1
+   #Velocities [bohr/tau] 
+X      -0.08593005
+
+----------------------------------------
+No.64: Time = 6.4 [fs]
+    1
+   #Coordinates [bohr] 
+X       4.75618441
+    1
+   #Velocities [bohr/tau] 
+X      -0.08797066
+
+----------------------------------------
+No.65: Time = 6.5 [fs]
+    1
+   #Coordinates [bohr] 
+X       4.38843653
+    1
+   #Velocities [bohr/tau] 
+X      -0.08986092
+
+----------------------------------------
+No.66: Time = 6.6 [fs]
+    1
+   #Coordinates [bohr] 
+X       4.01318831
+    1
+   #Velocities [bohr/tau] 
+X      -0.09159760
+
+----------------------------------------
+No.67: Time = 6.7 [fs]
+    1
+   #Coordinates [bohr] 
+X       3.63108108
+    1
+   #Velocities [bohr/tau] 
+X      -0.09317772
+
+----------------------------------------
+No.68: Time = 6.8 [fs]
+    1
+   #Coordinates [bohr] 
+X       3.24276792
+    1
+   #Velocities [bohr/tau] 
+X      -0.09459860
+
+----------------------------------------
+No.69: Time = 6.9 [fs]
+    1
+   #Coordinates [bohr] 
+X       2.84891249
+    1
+   #Velocities [bohr/tau] 
+X      -0.09585779
+
+----------------------------------------
+No.70: Time = 7.0 [fs]
+    1
+   #Coordinates [bohr] 
+X       2.45018795
+    1
+   #Velocities [bohr/tau] 
+X      -0.09695316
+
+----------------------------------------
+No.71: Time = 7.1 [fs]
+    1
+   #Coordinates [bohr] 
+X       2.04727575
+    1
+   #Velocities [bohr/tau] 
+X      -0.09788281
+
+----------------------------------------
+No.72: Time = 7.2 [fs]
+    1
+   #Coordinates [bohr] 
+X       1.64086452
+    1
+   #Velocities [bohr/tau] 
+X      -0.09864518
+
+----------------------------------------
+No.73: Time = 7.3 [fs]
+    1
+   #Coordinates [bohr] 
+X       1.23164886
+    1
+   #Velocities [bohr/tau] 
+X      -0.09923895
+
+----------------------------------------
+No.74: Time = 7.4 [fs]
+    1
+   #Coordinates [bohr] 
+X       0.82032817
+    1
+   #Velocities [bohr/tau] 
+X      -0.09966311
+
+----------------------------------------
+No.75: Time = 7.5 [fs]
+    1
+   #Coordinates [bohr] 
+X       0.40760545
+    1
+   #Velocities [bohr/tau] 
+X      -0.09991693
+
+----------------------------------------
+No.76: Time = 7.6 [fs]
+    1
+   #Coordinates [bohr] 
+X      -0.00581392
+    1
+   #Velocities [bohr/tau] 
+X      -0.09999998
+
+----------------------------------------
+No.77: Time = 7.7 [fs]
+    1
+   #Coordinates [bohr] 
+X      -0.41922336
+    1
+   #Velocities [bohr/tau] 
+X      -0.09991212
+
+----------------------------------------
+No.78: Time = 7.8 [fs]
+    1
+   #Coordinates [bohr] 
+X      -0.83191629
+    1
+   #Velocities [bohr/tau] 
+X      -0.09965351
+
+----------------------------------------
+No.79: Time = 7.9 [fs]
+    1
+   #Coordinates [bohr] 
+X      -1.24318738
+    1
+   #Velocities [bohr/tau] 
+X      -0.09922457
+
+----------------------------------------
+No.80: Time = 8.0 [fs]
+    1
+   #Coordinates [bohr] 
+X      -1.65233371
+    1
+   #Velocities [bohr/tau] 
+X      -0.09862604
+
+----------------------------------------
+No.81: Time = 8.1 [fs]
+    1
+   #Coordinates [bohr] 
+X      -2.05865602
+    1
+   #Velocities [bohr/tau] 
+X      -0.09785895
+
+----------------------------------------
+No.82: Time = 8.2 [fs]
+    1
+   #Coordinates [bohr] 
+X      -2.46145985
+    1
+   #Velocities [bohr/tau] 
+X      -0.09692461
+
+----------------------------------------
+No.83: Time = 8.3 [fs]
+    1
+   #Coordinates [bohr] 
+X      -2.86005676
+    1
+   #Velocities [bohr/tau] 
+X      -0.09582462
+
+----------------------------------------
+No.84: Time = 8.4 [fs]
+    1
+   #Coordinates [bohr] 
+X      -3.25376551
+    1
+   #Velocities [bohr/tau] 
+X      -0.09456084
+
+----------------------------------------
+No.85: Time = 8.5 [fs]
+    1
+   #Coordinates [bohr] 
+X      -3.64191319
+    1
+   #Velocities [bohr/tau] 
+X      -0.09313546
+
+----------------------------------------
+No.86: Time = 8.6 [fs]
+    1
+   #Coordinates [bohr] 
+X      -4.02383642
+    1
+   #Velocities [bohr/tau] 
+X      -0.09155089
+
+----------------------------------------
+No.87: Time = 8.7 [fs]
+    1
+   #Coordinates [bohr] 
+X      -4.39888245
+    1
+   #Velocities [bohr/tau] 
+X      -0.08980985
+
+----------------------------------------
+No.88: Time = 8.8 [fs]
+    1
+   #Coordinates [bohr] 
+X      -4.76641029
+    1
+   #Velocities [bohr/tau] 
+X      -0.08791532
+
+----------------------------------------
+No.89: Time = 8.9 [fs]
+    1
+   #Coordinates [bohr] 
+X      -5.12579178
+    1
+   #Velocities [bohr/tau] 
+X      -0.08587053
+
+----------------------------------------
+No.90: Time = 9.0 [fs]
+    1
+   #Coordinates [bohr] 
+X      -5.47641270
+    1
+   #Velocities [bohr/tau] 
+X      -0.08367898
+
+----------------------------------------
+No.91: Time = 9.1 [fs]
+    1
+   #Coordinates [bohr] 
+X      -5.81767379
+    1
+   #Velocities [bohr/tau] 
+X      -0.08134441
+
+----------------------------------------
+No.92: Time = 9.2 [fs]
+    1
+   #Coordinates [bohr] 
+X      -6.14899181
+    1
+   #Velocities [bohr/tau] 
+X      -0.07887081
+
+----------------------------------------
+No.93: Time = 9.3 [fs]
+    1
+   #Coordinates [bohr] 
+X      -6.46980050
+    1
+   #Velocities [bohr/tau] 
+X      -0.07626242
+
+----------------------------------------
+No.94: Time = 9.4 [fs]
+    1
+   #Coordinates [bohr] 
+X      -6.77955155
+    1
+   #Velocities [bohr/tau] 
+X      -0.07352368
+
+----------------------------------------
+No.95: Time = 9.5 [fs]
+    1
+   #Coordinates [bohr] 
+X      -7.07771556
+    1
+   #Velocities [bohr/tau] 
+X      -0.07065928
+
+----------------------------------------
+No.96: Time = 9.6 [fs]
+    1
+   #Coordinates [bohr] 
+X      -7.36378294
+    1
+   #Velocities [bohr/tau] 
+X      -0.06767412
+
+----------------------------------------
+No.97: Time = 9.7 [fs]
+    1
+   #Coordinates [bohr] 
+X      -7.63726477
+    1
+   #Velocities [bohr/tau] 
+X      -0.06457329
+
+----------------------------------------
+No.98: Time = 9.8 [fs]
+    1
+   #Coordinates [bohr] 
+X      -7.89769363
+    1
+   #Velocities [bohr/tau] 
+X      -0.06136211
+
+----------------------------------------
+No.99: Time = 9.9 [fs]
+    1
+   #Coordinates [bohr] 
+X      -8.14462441
+    1
+   #Velocities [bohr/tau] 
+X      -0.05804604
+
+----------------------------------------
+No.100: Time = 10.0 [fs]
+    1
+   #Coordinates [bohr] 
+X      -8.37763510
+    1
+   #Velocities [bohr/tau] 
+X      -0.05463077
+
+----------------------------------------

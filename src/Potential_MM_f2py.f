@@ -248,85 +248,6 @@ C            force_lj = - force_lj
 
 C     ****************************************************************** 
 C     ****************************************************************** 
-C     this subroutine give the interaction energy between each atoms of 
-C     HCOOH and Ar in MM domain.
-C     this is particularly for MCMC.  
-
-      subroutine potential_mm_f2py_mc_hcooh_ar(energy, natom,
-     &                           ndim, ind, positions, rlimit,
-     &                           check_pbc, box, invbox)
-        integer natom, ind, ndim
-        logical check_pbc
-        real(8) positions(ndim, natom)
-        real(8) box(ndim, ndim), invbox(ndim, ndim)
-        real(8) s(ndim), n(ndim) 
-        real(8) energy(natom)
-        real(8) rlimit
-Cf2py intent(in) natom, ind, positions, rlimit
-Cf2py intent(in) ndim, check_pbc, box, invbox
-Cf2py intent(out) energy
-
-        integer :: i, k 
-        real(8) :: rji, r_ch, r_oh, pot_lj  
-        real(8), dimension(ndim) :: vec_ji, vec_ch, vec_oh
-      
-        if ((ndim .ne. 3) .and. check_pbc) then
-           write(*,*) 'pbc is valid only for 3-dimension'
-           stop  
-        endif 
-
-        energy(:) = 0.d0
-        ind = ind + 1
-        do i = 1, natom  
-            r_ch = 0.d0  
-            vec_ch(:) = positions(:,1) - positions(:,2)
-            do k = 1, ndim  
-              r_ch = r_ch + vec_ch(k) ** 2
-            end do 
-            r_ch = sqrt(r_ch) 
-            r_oh = 0.d0  
-            vec_oh(:) = positions(:,5) - positions(:,4)
-            do k = 1, ndim  
-               r_oh = r_oh + vec_oh(k) ** 2
-            end do 
-            r_oh = sqrt(r_oh) 
-
-            if (i .eq. ind) cycle  
-            rji = 0.d0  
-            vec_ji(:) = positions(:,i) - positions(:,ind)
-            if (check_pbc) then 
-                s(:) = matmul(invbox(:,:), vec_ji(:)) 
-                n(:) = - nint(s(:))
-                s(:) = s(:) + n(:)
-                vec_ji(:) = matmul(box(:,:),s(:))
-            end if 
-            
-            do k = 1, ndim  
-              rji = rji + vec_ji(k) ** 2
-            end do 
-            rji = sqrt(rji) 
-            if (rji > rlimit) cycle 
-            
-            if (i == 1) then 
-              call get_lj_potential_har_adjusted(rji, r_ch, pot_lj) 
-            elseif (i == 2) then 
-              call get_lj_potential_car(rji, pot_lj) 
-            elseif (i == 3) then 
-              call get_lj_potential_oar(rji, pot_lj) 
-            elseif (i == 4) then 
-              call get_lj_potential_oar(rji, pot_lj) 
-            elseif (i == 5) then 
-             call get_lj_potential_har_adjusted(rji, r_oh, pot_lj) 
-            else
-              pot_lj = 0.d0 
-            end if 
-            energy(i) = pot_lj 
-      
-        end do 
-      
-      end subroutine potential_mm_f2py_mc_hcooh_ar
-
-C     ****************************************************************** 
 C     this subroutine give both energy and forces between each atom of 
 C     HCOOH and Ar in MM domain 
 
@@ -439,5 +360,168 @@ C            write(*,*) i,j, force_lj
         end do 
       
       end subroutine potential_qmmm_f2py_hcooh_ar
+
+C     ****************************************************************** 
+C     ****************************************************************** 
+C         These below methods are only called for MCMC calculation
+C     ****************************************************************** 
+C     ****************************************************************** 
+
+      subroutine potential_mm_f2py_ar_mc(energy, ind, natom,
+     &           ndim, positions, rlimit, 
+     &           check_pbc, box, invbox)
+       
+        implicit none 
+        integer ind 
+        integer ndim 
+        integer natom
+        logical check_pbc 
+        real(8) positions(ndim, natom)
+        real(8) box(ndim, ndim), invbox(ndim, ndim)
+        real(8) s(ndim), n(ndim) 
+        real(8) energy(natom)
+        real(8) rlimit
+Cf2py intent(in) natom, atom_numbers, positions, rlimit
+Cf2py intent(in) ind, ndim, check_pbc, box, invbox
+Cf2py intent(out) energy
+
+        integer :: i, j, k 
+        real(8) :: rji, pot_lj  
+        real(8), dimension(ndim) :: vec_ji 
+      
+        if ((ndim .ne. 3) .and. check_pbc) then
+           write(*,*) 'pbc is valid only for 3-dimension'
+           stop  
+        endif 
+        
+        energy(:) = 0.d0
+       
+        j = ind + 1
+
+        do i = 1, natom  
+          if (i .eq. j) cycle   
+            
+            rji = 0.d0  
+            pot_lj = 0.d0 
+            vec_ji(:) = positions(:,i) - positions(:,j)
+            if (check_pbc) then 
+                s(:) = matmul(invbox(:,:), vec_ji(:)) 
+                n(:) = - nint(s(:))
+                s(:) = s(:) + n(:)
+                vec_ji(:) = matmul(box(:,:),s(:))
+            end if  
+            do k = 1, ndim  
+              rji = rji + vec_ji(k) ** 2
+            end do 
+            rji = sqrt(rji) 
+            if (rji > rlimit) cycle 
+           
+            call get_lj_potential_arar(rji, pot_lj) 
+            energy(i) = pot_lj 
+      
+        end do 
+      
+      end subroutine potential_mm_f2py_ar_mc
+
+C     ****************************************************************** 
+C     ****************************************************************** 
+
+      subroutine potential_qmmm_f2py_hcooh_ar_mc(energy_qmmm, 
+     &           ind,
+     &           ndim,
+     &           natom_hcooh,
+     &           natom_ar,
+     &           positions_hcooh, 
+     &           positions_ar, 
+     &           rlimit, check_pbc, box, invbox)
+       
+        implicit none 
+        integer ind, ndim, natom_hcooh, natom_ar
+        logical check_pbc
+        real(8) positions_hcooh(ndim,natom_hcooh)
+        real(8) positions_ar(ndim, natom_ar)
+        real(8) box(ndim, ndim), invbox(ndim, ndim)
+        real(8) s(ndim), n(ndim) 
+        real(8) rlimit, energy_qmmm
+Cf2py intent(in) natom_ar, positions_ar,rlimit
+Cf2py intent(in) natom_hcooh, positions_hcooh, 
+Cf2py intent(in) check_pbc, box, invbox
+Cf2py intent(out) energy_qmmm
+
+        integer :: i, j, k 
+        real(8) :: rji, r_h2, r_h5, pot_lj 
+        real(8) :: r_h2_save, r_h5_save 
+        real(8), dimension(ndim) :: vec_ji 
+        real(8), dimension(ndim) :: vec_h2, vec_h5
+        
+        if ((ndim .ne. 3) .and. check_pbc) then
+           write(*,*) 'pbc is valid only for 3-dimension'
+           stop  
+        endif 
+       
+        energy_qmmm = 0.d0
+        r_h2_save = 1d5 
+        r_h5_save = 1d5 
+
+        do i = 1, natom_hcooh 
+           r_h2 = 0.d0  
+           if (i == 2) cycle 
+           vec_h2(:) = positions_hcooh(:,2) - positions_hcooh(:,i)
+           do k = 1, ndim  
+              r_h2 = r_h2 + vec_h2(k) ** 2
+           end do 
+           r_h2_save = min(r_h2_save, sqrt(r_h2)) 
+        end do
+
+        do i = 1, natom_hcooh 
+           r_h5 = 0.d0  
+           if (i == 5) cycle 
+           vec_h5(:) = positions_hcooh(:,5) - positions_hcooh(:,i)
+           do k = 1, ndim  
+              r_h5 = r_h5 + vec_h5(k) ** 2
+           end do 
+           r_h5_save = min(r_h5_save, sqrt(r_h5)) 
+        end do 
+    
+        j = ind + 1
+
+        do i = 1, natom_hcooh  
+            rji = 0.d0  
+            pot_lj = 0.d0  
+            vec_ji(:) = positions_ar(:,j) - positions_hcooh(:,i)
+            if (check_pbc) then 
+                s(:) = matmul(invbox(:,:), vec_ji(:)) 
+                n(:) = - nint(s(:))
+                s(:) = s(:) + n(:)
+                vec_ji(:) = matmul(box(:,:),s(:))
+            end if  
+            do k = 1, ndim  
+              rji = rji + vec_ji(k) ** 2
+            end do 
+            rji = sqrt(rji) 
+C           write(*,*) i,j,rji 
+            if (rji > rlimit) cycle 
+            
+            if (i == 1) then 
+              call get_lj_potential_car(rji, pot_lj) 
+            elseif (i == 2) then 
+              call get_lj_potential_har_adjusted(rji, r_h2_save, pot_lj)
+            elseif (i == 3) then 
+              call get_lj_potential_oar(rji, pot_lj) 
+            elseif (i == 4) then 
+              call get_lj_potential_oar(rji, pot_lj) 
+            elseif (i == 5) then 
+              call get_lj_potential_har_adjusted(rji, r_h5_save, pot_lj)
+            else
+              write(*,*) "Parameters of these atom pairs haven't 
+     &                    been set yet" 
+            end if 
+            energy_qmmm = energy_qmmm + pot_lj 
+C            write(*,*) i,j, force_lj 
+
+          end do 
+      
+      
+      end subroutine potential_qmmm_f2py_hcooh_ar_mc
 
 
