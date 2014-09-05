@@ -58,7 +58,6 @@ class VelocityVerlet(MolecularDynamics):
  
     def step(self):
         accelerations_save =  self.mol.get_accelerations()
-        print self.elaptime, self.mol.get_positions(), self.mol.get_velocities(),accelerations_save 
         positions = self.mol.get_positions() + \
                 self.mol.get_velocities() *  self.dt + 0.5 * \
                 accelerations_save * self.dt * self.dt

@@ -17,8 +17,8 @@ class TullySurfaceHopping(MolecularDynamics):
     
     """
     
-    def __init__(self, mol, pot, dt, nstep, tsh_times, restart = False,\
-            tsh_ediff_thresh=0.05, tsh_ediff_factor=0.25, check_mdstop_dispersion = False,\
+    def __init__(self, mol, pot, dt, nstep, tsh_times = 10, restart = False,\
+            tsh_ediff_thresh=0.1, tsh_ediff_factor=0.25, check_mdstop_dispersion = False,\
             limit_dispersion = 10.0, tlim = float('inf')):
       
         MolecularDynamics.__init__(self, mol, pot, dt, nstep, restart,\
@@ -46,8 +46,7 @@ class TullySurfaceHopping(MolecularDynamics):
     def setup_output(self):
         self.woutp = WriteOutputMD_TSH()
         if self.restart: self.woutp.restart(self)
-        else:
-            self.woutp.start(self)
+        else: self.woutp.start(self)
 
     def run(self):
         self.prepare()
@@ -61,9 +60,9 @@ class TullySurfaceHopping(MolecularDynamics):
             self.step()
             self.pre_judge_tsh()
             self.check_ediff()
-
             self.judge_tsh()
-
+         
+            self.count_tsh = 0
             self.woutp.logging(self)
         
             if self.mdstop_time_trans(): break
@@ -95,17 +94,13 @@ class TullySurfaceHopping(MolecularDynamics):
 
     def pre_judge_tsh(self):
         self.pot_multi = self.pot.get_potential_energy_multi()
-        self.nac =  np.diag(self.pot_multi) -  1.j*self.pot.get_inner_v_d()
-        self.eig, self.trans = linalg.eigh(self.nac)
-        self.woutp.write_prob_message("Time: {} :  ".format(self.elaptime * tau2fs )) 
-        for i in xrange(self.nrange):
-            if i == self.now_state: continue 
-            self.woutp.write_prob_message("{} to {} ".format(self.now_state,i))
-        self.woutp.write_prob_message("\n")
+        self.vd = self.pot.get_inner_v_d()
+        nac =  np.diag(self.pot_multi) -  1.j*self.vd
+        self.eig, self.trans = linalg.eigh(nac)
+        self.woutp.write_transition_prob("Time: {}, Count: {}, Current: {}\n".format(self.elaptime * tau2fs, self.count, self.now_state))
 
     def judge_tsh(self):
         while self.count_tsh < self.tsh_times:
-            self.count_tsh += 1
 
             # solving eq.8 in the reference papaer 
             # for getting the expansion coordinate
@@ -118,27 +113,29 @@ class TullySurfaceHopping(MolecularDynamics):
             #   bkl  =-2Re(akl*VDkl)
             #   gkj  = deltat*bjk/akk
             a = np.outer(self.c,np.conjugate(self.c))
-            b = -np.real(np.conjugate(a)*self.nac*2.j)
+            #b = -np.real(np.conjugate(a)*self.nac*2.j)
+            b = -2.0 * np.real(np.conjugate(a)*self.vd)
             
             # judgement  
             rand = random()
             tot = 0.0
-            self.woutp.write_prob_message("step :{} ".format(self.count_tsh)) 
+            self.woutp.write_transition_prob("step{}: ".format(self.count_tsh))
+            for i in xrange(self.nrange): self.woutp.write_transition_prob("a{}:{:5.3f} ".format(i,a[i,i].real)) 
             
             for i in xrange(self.nrange):
                 if i == self.now_state: continue 
                 g = self.delta_st*b[i,self.now_state] / \
                     a[self.now_state,self.now_state].real
                 # log the hopping probability 
-                self.woutp.write_prob_message("{0: 10.8f}  ".format(g)) 
+                self.woutp.write_transition_prob(" {}->{} prob:{:5.3f} rand:{:5.3f}".format(self.now_state,i,g,rand))
                 if tot < rand < tot + g:
-                    self.woutp.write_prob_message("\nHopping Starts\n") 
+                    self.woutp.write_transition_prob("\nHopping Starts\n")
                     self.woutp.write_trj_message("Hopping Starts [Probability Ocuuracne] \n")
                     if self.velocity_adjustment(i): return
+                self.woutp.write_transition_prob("\n")
                 tot += g
-            self.woutp.write_prob_message("\n") 
-        self.count_tsh = 0
-         
+            self.count_tsh += 1
+
     def velocity_adjustment(self,cand_state):
             
         # unit vector alog the mass-weighted coordinate

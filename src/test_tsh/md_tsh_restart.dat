@@ -1,0 +1,11 @@
+Time = 12402.4341 [tau]
+Current state: 2
+    1
+   #Coordinates [bohr] 
+X     211.44162568       0.00000000       0.00000000
+    1
+   #Velocities [bohr/tau] 
+X       0.01743886       0.00000000       0.00000000
+Coefficients
+St: 0  Re: 0.41559480417  Img: -0.611237598042
+St: 1  Re: -0.58965373194  Img: -0.325542675997

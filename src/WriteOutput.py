@@ -315,7 +315,6 @@ class WriteOutputMD_QMMM(WriteOutput):
                 f.write("\n"+"-"*40+"\n")
         else: self.count_mm_trj += 1 
 
-     
     def write_energy(self, self_md):
         if self.count_energy == self.freq_energy:
             self.count_energy = 0
@@ -424,11 +423,8 @@ class WriteOutputMD_TSH(WriteOutputMD):
                 f.write("\n" + "-"*40 + "\n\n")
         else: self.count_trj += 1
 
-    def write_prob_message(self,message):
-        # log the hopping probability 
-        pass 
-        #with open(self.file_prob,'a') as f: 
-        #    f.write(message)
+    def write_transition_prob(self, message):
+        with open(self.file_prob,'a') as f: f.write(message)
 
     def finalize(self,self_tsh):
         with open(self.file_restart,'w') as f: 
