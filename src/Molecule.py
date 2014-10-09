@@ -141,7 +141,7 @@ class Molecule:
         return self.velocities * self.masses[:,np.newaxis]
     
     def set_momentum(self, mlist):
-        self.velocities = np.array(mlist) / self.masses[:,np.newaxis]
+        self.velocities = np.array(mlist,dtype="f") / self.masses[:,np.newaxis]
     
     def get_forces(self):
         return self.forces 

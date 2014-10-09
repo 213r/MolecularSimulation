@@ -2,7 +2,7 @@ import numpy as np
 import pwd, os
 from copy import deepcopy
 from math import sqrt 
-from IO_MOLPRO import InputMOLPRO, OutputMOLPRO
+from IO_MOLPRO2012 import InputMOLPRO, OutputMOLPRO
 #from Potential_MM_Cython import potential_mm_cython, potential_qmmm_cython  
 from Potential_MM_f2py import potential_mm_f2py_ar, potential_qmmm_f2py_hcooh_ar, potential_mm_f2py_ar_mc, potential_qmmm_f2py_hcooh_ar_mc  
 
@@ -108,7 +108,8 @@ class Potential_QM:
         self.inp = inp
         self.nrange = nrange
         self.freq_molden = -1 
-        self.freq_save_input = -1 
+        self.freq_save_output = -1 
+        self.freq_save_wfu = -1 
         self.count = 0
         if str(self.inp) == "InputMOLPRO":
             root, ext = os.path.splitext(self.inp.get_inputname())
@@ -117,8 +118,11 @@ class Potential_QM:
     def set_freq_molden(self,freq):
         self.freq_molden = freq
 
-    def set_freq_save_input(self,freq):
-        self.freq_save_input = freq
+    def set_freq_save_output(self,freq):
+        self.freq_save_output = freq
+    
+    def set_freq_save_wfu(self,freq):
+        self.freq_save_wfu = freq
     
     def override_output(self, wfile,mol=None):
         if mol is None: mol = self.mol 
@@ -131,14 +135,19 @@ class Potential_QM:
             self.inp.add_method("put, molden, tmp_{}.molden".format(self.count))
         self.inp.write()
         os.system(self.inp.get_command())            
-        if self.freq_save_input > -1 and self.count % self.freq_save_input == 0:
+        if self.freq_save_output > -1 and self.count % self.freq_save_output == 0:
             os.system("cp tmp.out tmp_{}.out".format(self.count)) 
+        if self.freq_save_wfu > -1 and self.count % self.freq_save_wfu == 0:
+            os.system("cp /scr/nimi/tmp.wfu ./tmp_{}.wfu".format(self.count)) 
         self.mol.set_potential_energy_multi(self.get_potential_energy_multi())
         self.mol.set_potential_energy(self.get_potential_energy())
         self.mol.set_forces(-self.get_gradient())
         self.mol.set_addinfo(self.get_addinfo())
         self.count += 1
 
+    def remove_outputs(self):
+        self.outp.remove()  
+    
     def get_check_pbc(self):
         return False 
     
@@ -196,7 +205,7 @@ class Potential_QM_CASSCF(Potential_QM):
     def __init__(self, mol, inp, now_state, nrange):
         Potential_QM.__init__(self, mol, inp, nrange)
         self.now_state = now_state
-        self.inp.set_cpmcscf_istate(self.now_state,self.nrange, False) 
+        self.inp.set_cpmcscf_istate(self.now_state, self.nrange,False) 
     
     def get_potential_energy_multi(self):
         self.ene_multi = self.outp.get_potential_energy_mcscf_multi(self.nrange)
@@ -210,14 +219,18 @@ class Potential_QM_CASSCF(Potential_QM):
 
 class Potential_QM_CASPT2(Potential_QM):
     
-    def __init__(self, mol, inp, now_state, nrange):
+    def __init__(self, mol, inp, now_state, nrange, multi_state=True):
         Potential_QM.__init__(self, mol, inp, nrange)
 
         self.now_state = now_state
-        self.inp.set_caspt2_istate(self.now_state,self.nrange, False) 
+        self.multi_state = multi_state
+        self.inp.set_caspt2_istate(self.now_state,self.nrange) 
     
     def get_potential_energy_multi(self):
-        self.ene_multi = np.array([i for i in self.outp.get_data_caspt2_multi(self.nrange)[0]])
+        if self.multi_state:
+            self.ene_multi = np.array([i for i in self.outp.get_data_caspt2_multi(self.nrange)[0]])
+        else: 
+            self.ene_multi = self.outp.get_potential_energy_rspt2_ss(self.nrange)
         return self.ene_multi 
 
     def get_potential_energy(self):
@@ -239,8 +252,7 @@ class Potential_TSH(Potential_QM):
         Potential_QM.__init__(self, mol, inp, nrange)
         self.now_state = now_state
         self.d_multi_old = None
-    
-        self.set_now_state(self.now_state) 
+        self.set_now_state(self.now_state, self.nrange) 
 
     def calc(self):
         self.inp.set_molecule(self.mol) 
@@ -249,11 +261,14 @@ class Potential_TSH(Potential_QM):
             self.inp.add_method("put, molden, tmp_{}.molden".format(self.count))
         self.inp.write()
         os.system(self.inp.get_command())
-        if self.freq_save_input > -1 and self.count % self.freq_save_input == 0:
-            os.system("cp tmp.out tmp_{}.out".format(self.count)) 
         self.check_nacme_sign() 
         self.mol.set_potential_energy_multi(self.get_potential_energy_multi())
         self.mol.set_forces(-self.get_gradient())
+        if self.freq_save_output > -1 and self.count % self.freq_save_output == 0:
+            os.system("cp tmp.out tmp_{}.out".format(self.count)) 
+        if self.freq_save_wfu > -1 and self.count % self.freq_save_wfu == 0:
+            os.system("cp /scr/nimi/tmp.wfu ./tmp_{}.wfu".format(self.count)) 
+        #self.outp.remove()  
         self.count += 1
 
     def set_now_state(self,now_state):
@@ -262,12 +277,37 @@ class Potential_TSH(Potential_QM):
     def get_potential_energy_multi(self):
         pass  
 
+    def get_gradient(self):
+        return self.outp.get_gradient_multi(self.now_state) 
+    
+    def get_now_state(self):
+        return self.now_state
+
+    def get_inner_v_d(self):
+        pass
+
+    def check_nacme_sign(self): 
+        pass
+
+    def get_ci_coeff(self):
+        return self.ci_coeff 
+
+class Potential_TSH_CASSCF(Potential_TSH):
+
+    def __init__(self, mol, inp, now_state, nrange):
+        #super(Potential_TSH_CASSCF, self).__init__(mol, inp, now_state, nrange)
+        Potential_TSH.__init__(self, mol, inp, now_state, nrange)
+
+    def set_now_state(self, now_state, nrange):
+        self.now_state = now_state
+        self.nrange = nrange
+        self.inp.set_cpmcscf_istate(self.now_state,self.nrange, True) 
+
     def check_nacme_sign(self):
         self.d_multi = self.outp.get_nacme(self.nrange)
         if self.d_multi_old == None:
             self.d_multi_old = self.d_multi
             return 
-          
         for i in xrange(self.nrange-1):
             for j in xrange(i+1,self.nrange):
                 sum_d = np.sum(self.d_multi[i,j] * \
@@ -277,38 +317,22 @@ class Potential_TSH(Potential_QM):
                     self.d_multi[j,i] = - self.d_multi[j,i]
         self.d_multi_old = self.d_multi
 
-    def get_gradient(self):
-        return self.outp.get_gradient_multi(self.now_state) 
-    
-
-    def get_now_state(self):
-        return self.now_state
-
-    def get_nacme_multi(self):
-        return self.d_multi 
-
-    def get_inner_v_d(self):
-        pass
-
-class Potential_TSH_CASSCF(Potential_TSH):
-
-    def __init__(self, mol, inp, now_state, nrange):
-        #super(Potential_TSH_CASSCF, self).__init__(mol, inp, now_state, nrange)
-        Potential_TSH.__init__(self, mol, inp, now_state, nrange)
-
-    def set_now_state(self,now_state):
-        self.now_state = now_state
-        self.inp.set_cpmcscf_istate(self.now_state,self.nrange, True) 
-
     def get_potential_energy_multi(self):
+        self.ci_coeff = self.outp.get_ci_coeff_casscf()
         return self.outp.get_potential_energy_mcscf_multi(self.nrange)
 
     def get_inner_v_d(self):
         # the sign of nacv must be checked befor it is used 
-        return np.einsum("pq,ijpq -> ij",self.mol.get_velocities(), self.d_multi)
+        return np.einsum("pq, ijpq -> ij",self.mol.get_velocities(), self.d_multi)
 
-    def get_velocity_adjustment_vecotr(self): 
-        return self.d_multi  
+    def get_velocity_adjustment_vector(self, now_state, cand_state, count): 
+        return self.d_multi[now_state, cand_state]  
+    
+    def get_nacme_multi(self):
+        return self.d_multi 
+
+    def remove_outputs(self):
+        self.outp.remove()  
 
 class Potential_TSH_CASPT2(Potential_TSH):
 
@@ -317,32 +341,37 @@ class Potential_TSH_CASPT2(Potential_TSH):
         #super(Potential_TSH_CASPT2, self).__init__(mol, inp, now_state, nrange)
         self.setup()
 
-    def set_now_state(self,now_state):
+    def __str__(self):
+        return "Potential_TSH_CASPT2"
+    
+    def set_now_state(self,now_state,nrange):
         self.now_state = now_state
-        self.inp.set_caspt2_istate(self.now_state,self.nrange, False) 
+        self.nrange = nrange 
+        self.inp.set_caspt2_istate(self.now_state, self.nrange) 
 
     def setup(self):
         self.eps = 0.01
         dinp = deepcopy(self.inp)
         dinp.set_inputname("tmp2.com")
-        s = dinp.get_method_save().replace("<force>\n","")
-        s = s.replace("<cpmcscf>\n","").replace("force\n","") 
+        s = dinp.get_method_save().replace("<force>","")
         dinp.set_method_save(s)
         dinp.set_caspt2_istate(self.now_state, self.nrange) 
         self.dinp = dinp
         if str(self.dinp) == "InputMOLPRO":
             root, ext = os.path.splitext(self.dinp.get_inputname())
             self.doutp = OutputMOLPRO(root + ".out",self.mol)
-
+        self.count_save = -1
+    
     def get_potential_energy_multi(self):
+        self.ci_coeff = self.outp.get_ci_coeff_casscf()
         self.ene, self.co, self.s = self.outp.get_data_caspt2_multi(self.nrange)   
         return  self.ene
     
     def get_inner_v_d(self):
         # the sign of nacv must be checked befor it is used 
-        # refert to eq.13
+        # refer to eq.13
         pos_save,vel_save = self.mol.get_positions(), self.mol.get_velocities()
-        len_vel =  sqrt(np.sum(vel_save)**2)
+        len_vel =  np.linalg.norm(vel_save)
         self.mol.set_positions(pos_save + self.eps * vel_save / len_vel) 
         self.dinp.set_molecule(self.mol)  
         self.dinp.make_input()
@@ -351,13 +380,33 @@ class Potential_TSH_CASPT2(Potential_TSH):
         self.mol.set_positions(pos_save) 
         ene2, co2, s2 = self.doutp.get_data_caspt2_multi(self.nrange)   
         dco = (co2 - self.co) / self.eps 
-        # refert to eq.9
+        # refert to eq.11
         v_d1 = np.einsum("ip, jq, pq -> ij",self.co,dco,self.s)
-        v_d2 = np.einsum("ip,pqlm,jq -> ijlm",self.co,self.d_multi,self.co)
-        return len_vel * v_d1 + np.einsum("pq,ijpq -> ij",vel_save,v_d2) 
+        #self.doutp.remove()  
+        return len_vel * v_d1 
 
-    def get_velocity_adjustment_vecotr(self): 
-        return self.mol.get_forces() 
+    def get_velocity_adjustment_vector(self,now_state, cand_state,count): 
+        if count != self.count_save:
+            self.inp.set_caspt2_istate(cand_state, self.nrange) 
+            self.inp.make_input()
+            self.inp.write()
+            os.system(self.inp.get_command())
+            self.adjust_forces = -self.outp.get_gradient_multi(cand_state)
+            self.inp.set_caspt2_istate(now_state, self.nrange) 
+            self.count_save = count 
+            #self.outp.remove()  
+        return self.adjust_forces - self.mol.get_forces() 
+
+    def get_nacme_multi(self):
+        return np.zeros((self.nrange,self.nrange)) 
+    
+    def get_mixing_coeff(self):
+        return self.co
+
+    def remove_outputs(self):
+        self.outp.remove()  
+        self.doutp.remove()  
+
 
 #class Potential_for_tully:
 #    from TestPotential_TSH_type1 import nac, adiabatic, diff_adiabatic 

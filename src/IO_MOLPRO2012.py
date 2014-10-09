@@ -127,9 +127,8 @@ class InputMOLPRO:
         input_txt += 'memory,' + str(self.memory) + \
                 ',' + self.mem_unit + '\n'
         input_txt += self.option + '\n'
-        #input_txt += self.symmetry + '\n'
-        input_txt += 'geomtyp=' + self.geomtype + '\n'
-        input_txt += 'geometry={nosym;\n' 
+        input_txt += self.symmetry + '\n'
+        input_txt += 'geometry={\n' 
         #input_txt += self.symmetry + ';\n'
         input_txt += str(len(self.mol)) + '\n' 
         input_txt += self.title + '\n' 
@@ -163,7 +162,7 @@ class InputMOLPRO:
     def get_command(self):
         #submit = "/share/apps/opt/molpro/2010.1/bin/molprop_2010_1_Linux_x86_64_i8"
         #submit = "/share/apps/opt/molpro/2009.1/bin/molpros_2008_1_Linux_x86_64_i8" 
-        submit = "/share/apps/opt/molpro/2012.1/bin/molpro" 
+        submit = "/share/apps/opt/molpro/2012.1/molprop_2012_1_Linux_x86_64_i8/bin/molpro" 
         scrdir = "/scr/" + self.user 
         #scrdir = os.getcwd() 
         return "{0} --no-xml-output -d {1} -I {1} -W {1} {2}/{3}".format(submit, \
@@ -186,7 +185,13 @@ class OutputMOLPRO:
         self.wfile = wfile
 
     def remove(self):
-        if os.path.isfile(self.wfile): os.remove(self.wfile)  
+        lfile = self.wfile.replace("out","log")
+        if os.path.isfile(self.wfile):
+            command = "rm {}* ".format(self.wfile)
+            os.system(command) 
+        if os.path.isfile(lfile):   
+            command = "rm {}* ".format(lfile)
+            os.system(command) 
 
 #    def get_natom(self):
 #        f = open(self.wfile)
@@ -287,26 +292,26 @@ class OutputMOLPRO:
 #    def get_potential_energy_mcscf(self):
 #        return self.get_potential_energy__mcscf_multi(nrange=1) 
 
-    def get_potential_energy_ccsdt(self):
+    def get_potential_energy_mcscf_multi(self,nrange):
         try: 
             f = open(self.wfile,'r')
         except:
             print 'no file of ' + self.wfile
             sys.exit() 
 
-        ene_ary = [] 
-        pattern = re.compile(r"!.*CCSD\(T\)") 
+        ene = np.zeros(nrange) 
         l = f.readline()
         while l:
-            if pattern.search(l): ene_ary.append(float(l.split()[-1]))
+            if l.find('!MCSCF') > -1 and l.find('.1 Energy') > -1:
+                ind = int(l[l.find('.1')-1]) - 1
+                ene[ind] = float(l.split()[4])
             l = f.readline()
-
-        if len(ene_ary) > 1: return np.array(ene_ary)
-        elif len(ene_ary) == 1: return ene_ary[0]
-        else: 
-            print  "No the energy at ccsd(t) level found"
+        
+        try:
+            return np.array(ene)
+        except:
+            print 'no convergence'
             sys.exit() 
-
 
     def get_potential_energy_rspt2_ss(self,nrange):
         try: 
@@ -327,6 +332,7 @@ class OutputMOLPRO:
         except:
             print 'no convergence'
             sys.exit() 
+
 
     def get_ci_coeff_casscf(self):
         try: 

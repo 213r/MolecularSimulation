@@ -358,6 +358,7 @@ class WriteOutputMD_TSH(WriteOutputMD):
         self.file_log, self.file_trj = "md_tsh.log", "md_tsh.trj"
         self.file_restart = "md_tsh_restart.dat"
         self.file_prob = "tsh_prob.dat" 
+        self.check_prob = False 
 
     def start(self,self_tsh):
         WriteOutput.start(self) 
@@ -408,24 +409,39 @@ class WriteOutputMD_TSH(WriteOutputMD):
     def write_trj(self, self_tsh):
         if self.count_trj == self.freq_trj:
             self.count_trj = 0
-            with open(self.file_trj,'a') as f: 
-                f.write('No.{0}: Time = {1} [fs]\n'.format(str(self_tsh.count),str(self_tsh.elaptime*tau2fs)))
-                f.write(self_tsh.mol.get_positions_formated(unit='bohr'))  
-                f.write(self_tsh.mol.get_velocities_formated(unit='bohr/tau'))  
-                f.write("\nCoefficeients of each state\n")   
-                for i, ic in enumerate(self_tsh.c): 
-                    f.write("St{}:  Re {}  Img {}\n".format(i+1, ic.real, ic.imag))   
-                f.write("\nThe length of nacme\n")   
-                for i in xrange(self_tsh.nrange-1): 
-                    for j in xrange(i+1,self_tsh.nrange): 
-                        nacme = self_tsh.pot.get_nacme_multi()[i,j]
-                        f.write("St{} to St{}: {}\n".format(i+1, j+1, np.sum(nacme ** 2)))
-                f.write("\n" + "-"*40 + "\n\n")
+            txt = "" 
+            txt += 'No.{0}: Time = {1} [fs]\n'.format(str(self_tsh.count),str(self_tsh.elaptime*tau2fs))
+            txt += self_tsh.mol.get_positions_formated(unit='bohr')  
+            txt += self_tsh.mol.get_velocities_formated(unit='bohr/tau')  
+            txt += "\nCoefficeients of each state\n"   
+            for i, ic in enumerate(self_tsh.c): 
+                txt += "St{}:  Re {}  Img {}\n".format(i+1, ic.real, ic.imag)   
+            txt += "\nInner Product of velocity and nacme\n"   
+            for i in xrange(self_tsh.nrange): 
+                for j in xrange(self_tsh.nrange): 
+                    txt += "St{} to St{}: {}\n".format(i+1, j+1, self_tsh.v_d[i,j])
+            txt += "\nCI vector\n"
+            txt += self_tsh.pot.get_ci_coeff()    
+            if str(self_tsh.pot) == "Potential_TSH_CASPT2": 
+                txt += "\nMIXING COEFFICIENTS[MS-CASPT2 only]\n"
+                mix = self_tsh.pot.get_mixing_coeff()    
+                for i in xrange(self_tsh.nrange): txt += "{} ".format(i+1) 
+                txt += "\n" 
+                for i in xrange(self_tsh.nrange): 
+                    txt += "{} ".format(i+1) 
+                    for j in xrange(self_tsh.nrange): txt += "{} ".format(mix[i,j]) 
+                    txt += "\n" 
+            txt += "\n" + "-"*40 + "\n\n"
+            with open(self.file_trj,'a') as f: f.write(txt)
         else: self.count_trj += 1
 
-    def write_transition_prob(self, message):
-        with open(self.file_prob,'a') as f: f.write(message)
+    def set_check_prob(self, check_prob): self.check_prob = check_prob  
 
+    def write_transition_prob(self, message):
+        if self.check_prob:
+            with open(self.file_prob,'a') as f: f.write(message)
+
+    def write_prob_message(self, message): pass 
     def finalize(self,self_tsh):
         with open(self.file_restart,'w') as f: 
             f.write('Time = {0} [tau]\n'.format(str(self_tsh.elaptime)))
@@ -449,10 +465,16 @@ class WriteOutputMD_TSH_QMMM(WriteOutputMD_TSH):
         self.file_log, self.file_trj = "md_tsh_qmmm.log", "md_tsh_qmmm.trj"
         self.file_restart = "md_tsh_qmmm_restart.dat"
         self.file_prob = "tsh_prob.dat" 
+        self.check_prob = False 
+        
+        self.file_mm_trj ="md_tsh_qmmm_mm.trj" 
+        self.freq_mm_trj = BIG_NUM 
+        self.count_mm_trj = 0 
 
     def start(self,self_tsh):
         WriteOutput.start(self) 
         if os.path.isfile(self.file_prob): os.remove(self.file_prob)  
+        if os.path.isfile(self.file_mm_trj): os.remove(self.file_mm_trj)  
 
         self.write_log_message("MD starts at {0:%Y-%m-%d %H:%M:%S}\n".format(self.time_start))
         self.write_ene_message("#Time[fs] State Kin(QM)[H] Pot(QM)(1~{0},current) Kin(MM) Pot(MM) Pot(QMMM) Total\n"\
@@ -537,3 +559,23 @@ class WriteOutputMD_TSH_QMMM(WriteOutputMD_TSH):
             f.write("MD ends at {0:%Y-%m-%d %H:%M:%S}\n".format(time_end))
             f.write("Total MD run takes {0}\n".format(str(time_end - time_start).split('.')[0]))
 
+    def logging(self, self_tsh):
+        self.write_xyz(self_tsh)
+        self.write_trj(self_tsh)
+        self.write_energy(self_tsh)
+        self.write_mm_trj(self_tsh)
+        if self.q_add: self.write_additional(self_tsh)
+
+    def write_mm_trj(self, self_tsh):
+        if self.count_mm_trj == self.freq_mm_trj:
+            self.count_mm_trj = 0
+            with open(self.file_mm_trj,'a') as f: 
+                f.write('No.{0}: Time = {1} [fs]\n'.format(str(self_tsh.count),str(self_tsh.elaptime*tau2fs)))
+                f.write(self_tsh.mol_mm.get_positions_formated(unit='bohr'))  
+                f.write(self_tsh.mol_mm.get_velocities_formated(unit='bohr/tau'))  
+                f.write("\n"+"-"*40+"\n")
+        else: self.count_mm_trj += 1 
+
+    def set_freq_mm_trajectory(self, freq_mm):
+        self.freq_mm_trj = freq_mm - 1
+        self.count_mm_trj = self.freq_mm_trj

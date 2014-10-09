@@ -113,7 +113,7 @@ class VelocityVerlet_QMMM(MolecularDynamics):
             self.mdstop_time_trans()
             if self.mdstop_time_trans(): break
             if self.check_mdstop_dispersion and self.mdstop_atom_dispersion(): break
-
+            self.pot.remove_outputs()
         self.woutp.finalize(self)
  
     def setup_output(self):
